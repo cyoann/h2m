@@ -46,11 +46,42 @@ textarea {
   resize: none;
 }
 
+.file-input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .app-shell {
   display: grid;
   grid-template-rows: auto auto 1fr auto;
   min-height: 100vh;
   padding-inline: clamp(var(--space-4), 3vw, var(--space-7));
+}
+
+.app-shell {
+  position: relative;
+}
+
+.app-shell.is-dragging::after {
+  position: fixed;
+  inset: var(--space-4);
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--color-accent);
+  border-radius: var(--radius-lg);
+  background: rgb(0 0 0 / 0.36);
+  color: var(--color-bg);
+  content: "Drop HTML file to convert";
+  font-family: var(--font-serif);
+  font-size: clamp(1.8rem, 5vw, 4rem);
+  letter-spacing: -0.06em;
+  pointer-events: none;
+  backdrop-filter: blur(10px);
 }
 
 .topbar {

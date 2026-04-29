@@ -1,19 +1,24 @@
 import { convertHtmlToMarkdown } from '../core/converter';
 import { applyUiPreferences, loadSettings, saveSettings, type AppSettings } from '../core/settings';
-import { createSettingsPanel } from './settings-panel';
 import {
   canReadPlainClipboard,
+  canReadRichClipboard,
   canWriteClipboard,
   readClipboardEventPayload,
   readSystemClipboardPayload,
   type ClipboardPayload,
 } from './clipboard';
+import { deriveMarkdownFileName, downloadTextFile, isLikelyReadableTextFile, readTextFile } from './files';
+import { createSettingsPanel } from './settings-panel';
 
 interface LayoutControls {
   input: HTMLTextAreaElement;
   output: HTMLTextAreaElement;
+  fileInput: HTMLInputElement;
+  openButton: HTMLButtonElement;
   pasteButton: HTMLButtonElement;
   copyButton: HTMLButtonElement;
+  downloadButton: HTMLButtonElement;
   clearButton: HTMLButtonElement;
   settingsButton: HTMLButtonElement;
   statusPrimary: HTMLElement;
@@ -33,6 +38,8 @@ export function createLayout(): HTMLElement {
   const shell = document.createElement('div');
 
   let settings = loadSettings();
+  let currentSourceName = 'h2m.html';
+  let dragDepth = 0;
 
   shell.className = 'app-shell';
   applyUiPreferences(settings);
@@ -89,6 +96,14 @@ export function createLayout(): HTMLElement {
             <button
               class="text-button"
               type="button"
+              data-action="open-file"
+              title="Open an HTML or text file"
+            >
+              Open
+            </button>
+            <button
+              class="text-button"
+              type="button"
               data-action="paste-html"
               title="Paste HTML from clipboard"
             >
@@ -122,15 +137,26 @@ export function createLayout(): HTMLElement {
             <h2>Markdown</h2>
           </div>
 
-          <button
-            class="text-button"
-            type="button"
-            data-action="copy-markdown"
-            disabled
-            title="Copy Markdown to clipboard"
-          >
-            Copy
-          </button>
+          <div class="panel__actions">
+            <button
+              class="text-button"
+              type="button"
+              data-action="copy-markdown"
+              disabled
+              title="Copy Markdown to clipboard"
+            >
+              Copy
+            </button>
+            <button
+              class="text-button"
+              type="button"
+              data-action="download-markdown"
+              disabled
+              title="Download Markdown file"
+            >
+              Download
+            </button>
+          </div>
         </header>
 
         <textarea
@@ -144,6 +170,14 @@ export function createLayout(): HTMLElement {
         ></textarea>
       </article>
     </section>
+
+    <input
+      class="file-input"
+      type="file"
+      data-file-input
+      accept=".html,.htm,.xhtml,.xml,.txt,text/html,text/plain,application/xhtml+xml,application/xml"
+      aria-label="Open HTML file"
+    />
 
     <footer class="statusbar" aria-live="polite">
       <div class="statusbar__messages">
@@ -174,11 +208,25 @@ export function createLayout(): HTMLElement {
 
   const controls = getLayoutControls(shell);
 
-  controls.pasteButton.disabled = !canReadPlainClipboard();
+  controls.pasteButton.disabled = !canReadPlainClipboard() && !canReadRichClipboard();
   controls.clearButton.disabled = true;
 
   controls.settingsButton.addEventListener('click', () => {
     settingsPanel.showModal();
+  });
+
+  controls.openButton.addEventListener('click', () => {
+    controls.fileInput.click();
+  });
+
+  controls.fileInput.addEventListener('change', async () => {
+    const file = controls.fileInput.files?.item(0);
+
+    if (file) {
+      await loadFile(file);
+    }
+
+    controls.fileInput.value = '';
   });
 
   controls.input.addEventListener('input', () => {
@@ -194,6 +242,7 @@ export function createLayout(): HTMLElement {
 
     event.preventDefault();
     insertAtSelection(controls.input, payload.content);
+    currentSourceName = 'clipboard.html';
     renderConversion(getPasteStatus(payload));
   });
 
@@ -205,21 +254,71 @@ export function createLayout(): HTMLElement {
     await copyMarkdown();
   });
 
+  controls.downloadButton.addEventListener('click', () => {
+    downloadMarkdown();
+  });
+
   controls.clearButton.addEventListener('click', () => {
-    controls.input.value = '';
-    renderConversion('Cleared');
-    controls.input.focus();
+    clearInput();
+  });
+
+  shell.addEventListener('dragenter', (event) => {
+    if (!hasDraggedFiles(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    dragDepth += 1;
+    shell.classList.add('is-dragging');
+  });
+
+  shell.addEventListener('dragover', (event) => {
+    if (!hasDraggedFiles(event)) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'copy';
+    }
+  });
+
+  shell.addEventListener('dragleave', (event) => {
+    if (!hasDraggedFiles(event)) {
+      return;
+    }
+
+    dragDepth = Math.max(0, dragDepth - 1);
+
+    if (dragDepth === 0) {
+      shell.classList.remove('is-dragging');
+    }
+  });
+
+  shell.addEventListener('drop', async (event) => {
+    if (!hasDraggedFiles(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    dragDepth = 0;
+    shell.classList.remove('is-dragging');
+
+    const file = event.dataTransfer?.files.item(0);
+
+    if (file) {
+      await loadFile(file);
+    }
   });
 
   shell.addEventListener('keydown', async (event) => {
     await handleShortcut(event, {
+      onOpen: () => controls.fileInput.click(),
       onPaste: pasteFromClipboard,
       onCopy: copyMarkdown,
-      onClear: () => {
-        controls.input.value = '';
-        renderConversion('Cleared');
-        controls.input.focus();
-      },
+      onDownload: downloadMarkdown,
+      onClear: clearInput,
       onSettings: () => {
         settingsPanel.showModal();
       },
@@ -230,10 +329,30 @@ export function createLayout(): HTMLElement {
 
   return shell;
 
+  async function loadFile(file: File): Promise<void> {
+    if (!isLikelyReadableTextFile(file)) {
+      setStatus('Unsupported file', 'Use .html, .htm, .xhtml, .xml, or .txt');
+      return;
+    }
+
+    try {
+      const importedFile = await readTextFile(file);
+
+      currentSourceName = importedFile.name;
+      controls.input.value = importedFile.content;
+
+      renderConversion(`Opened ${importedFile.name}`);
+      controls.input.focus();
+    } catch {
+      setStatus('Could not read file', 'Try copy and paste instead');
+    }
+  }
+
   async function pasteFromClipboard(): Promise<void> {
     try {
       const payload = await readSystemClipboardPayload();
 
+      currentSourceName = 'clipboard.html';
       controls.input.value = payload.content;
       renderConversion(getPasteStatus(payload));
       controls.input.focus();
@@ -264,12 +383,32 @@ export function createLayout(): HTMLElement {
     setStatus('Markdown selected', 'Press Ctrl/Cmd+C to copy');
   }
 
+  function downloadMarkdown(): void {
+    if (!controls.output.value) {
+      setStatus('Nothing to download', 'Markdown output is empty');
+      return;
+    }
+
+    const fileName = deriveMarkdownFileName(currentSourceName);
+
+    downloadTextFile(controls.output.value, fileName);
+    setStatus('Downloaded Markdown', fileName);
+  }
+
+  function clearInput(): void {
+    currentSourceName = 'h2m.html';
+    controls.input.value = '';
+    renderConversion('Cleared');
+    controls.input.focus();
+  }
+
   function renderConversion(statusMessage?: string): void {
     const result = convertHtmlToMarkdown(controls.input.value, settings);
     const metrics = getOutputMetrics(controls.input.value, result.markdown);
 
     controls.output.value = result.markdown;
     controls.copyButton.disabled = result.markdown.length === 0;
+    controls.downloadButton.disabled = result.markdown.length === 0;
     controls.clearButton.disabled = controls.input.value.length === 0;
 
     renderMetrics(metrics);
@@ -300,8 +439,10 @@ export function createLayout(): HTMLElement {
 }
 
 interface ShortcutHandlers {
+  onOpen: () => void;
   onPaste: () => Promise<void>;
   onCopy: () => Promise<void>;
+  onDownload: () => void;
   onClear: () => void;
   onSettings: () => void;
 }
@@ -314,6 +455,12 @@ async function handleShortcut(event: KeyboardEvent, handlers: ShortcutHandlers):
     return;
   }
 
+  if (!event.shiftKey && key === 'o') {
+    event.preventDefault();
+    handlers.onOpen();
+    return;
+  }
+
   if (event.shiftKey && key === 'v') {
     event.preventDefault();
     await handlers.onPaste();
@@ -323,6 +470,12 @@ async function handleShortcut(event: KeyboardEvent, handlers: ShortcutHandlers):
   if (event.shiftKey && key === 'c') {
     event.preventDefault();
     await handlers.onCopy();
+    return;
+  }
+
+  if (event.shiftKey && key === 's') {
+    event.preventDefault();
+    handlers.onDownload();
     return;
   }
 
@@ -342,8 +495,11 @@ function getLayoutControls(root: HTMLElement): LayoutControls {
   return {
     input: getRequiredElement(root, '#html-input', HTMLTextAreaElement),
     output: getRequiredElement(root, '#markdown-output', HTMLTextAreaElement),
+    fileInput: getRequiredElement(root, '[data-file-input]', HTMLInputElement),
+    openButton: getRequiredElement(root, '[data-action="open-file"]', HTMLButtonElement),
     pasteButton: getRequiredElement(root, '[data-action="paste-html"]', HTMLButtonElement),
     copyButton: getRequiredElement(root, '[data-action="copy-markdown"]', HTMLButtonElement),
+    downloadButton: getRequiredElement(root, '[data-action="download-markdown"]', HTMLButtonElement),
     clearButton: getRequiredElement(root, '[data-action="clear-html"]', HTMLButtonElement),
     settingsButton: getRequiredElement(root, '[data-action="open-settings"]', HTMLButtonElement),
     statusPrimary: getRequiredElement(root, '[data-status-primary]', HTMLElement),
@@ -378,10 +534,6 @@ function countWords(value: string): number {
   return words?.length ?? 0;
 }
 
-function getPrimaryStatus(inputCharacters: number): string {
-  return inputCharacters === 0 ? 'Ready' : 'Converted';
-}
-
 function insertAtSelection(textarea: HTMLTextAreaElement, value: string): void {
   const start = textarea.selectionStart;
   const end = textarea.selectionEnd;
@@ -391,6 +543,14 @@ function insertAtSelection(textarea: HTMLTextAreaElement, value: string): void {
 
 function getPasteStatus(payload: ClipboardPayload): string {
   return payload.format === 'html' ? 'Pasted HTML from clipboard' : 'Pasted plain text from clipboard';
+}
+
+function getPrimaryStatus(inputCharacters: number): string {
+  return inputCharacters === 0 ? 'Ready' : 'Converted';
+}
+
+function hasDraggedFiles(event: DragEvent): boolean {
+  return Array.from(event.dataTransfer?.types ?? []).includes('Files');
 }
 
 function formatNumber(value: number): string {
