@@ -1,5 +1,5 @@
-@use "./tokens";
-@use "./themes";
+@use './tokens';
+@use './themes';
 
 *,
 *::before,
@@ -20,9 +20,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-  background:
-    radial-gradient(circle at top left, rgb(255 255 255 / 0.32), transparent 28rem),
-    var(--color-bg);
+  background: radial-gradient(circle at top left, rgb(255 255 255 / 0.32), transparent 28rem), var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-ui);
   text-rendering: optimizeLegibility;
@@ -97,7 +95,7 @@ textarea {
   max-width: var(--content-max);
   width: 100%;
   margin: 0 auto;
-  padding-block: clamp(var(--space-6), 6vw, var(--space-8));
+  padding-block: var(--hero-padding-block);
 }
 
 .eyebrow,
@@ -140,8 +138,8 @@ textarea {
 
 .panel {
   display: grid;
-  grid-template-rows: auto minmax(22rem, 1fr);
-  min-height: 32rem;
+  grid-template-rows: auto minmax(var(--editor-min-height), 1fr);
+  min-height: var(--panel-min-height);
   overflow: hidden;
   border: var(--line-thin);
   border-radius: var(--radius-lg);
@@ -155,7 +153,7 @@ textarea {
   justify-content: space-between;
   gap: var(--space-4);
   min-height: 5.75rem;
-  padding: var(--space-5);
+  padding: var(--panel-padding);
   border-bottom: var(--line-thin);
 }
 
@@ -170,8 +168,8 @@ textarea {
 .editor {
   width: 100%;
   height: 100%;
-  min-height: 22rem;
-  padding: var(--space-5);
+  min-height: var(--editor-min-height);
+  padding: var(--panel-padding);
   border: 0;
   outline: 0;
   background: var(--color-editor);
@@ -313,6 +311,41 @@ textarea {
   font-weight: 700;
 }
 
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr minmax(11rem, auto);
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3);
+  border: var(--line-thin);
+  border-radius: var(--radius-md);
+  background: var(--color-editor);
+}
+
+.field-row strong,
+.field-row small {
+  display: block;
+}
+
+.field-row strong {
+  font-size: 0.95rem;
+}
+
+.field-row small {
+  margin-top: var(--space-1);
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+.field-row select {
+  min-width: 11rem;
+  padding: 0.55rem 0.75rem;
+  border: var(--line-thin);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
 .check-row {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -345,7 +378,11 @@ textarea {
 }
 
 .settings-card__footer {
-  justify-content: flex-end;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5);
   border-top: var(--line-thin);
 }
 
@@ -387,6 +424,14 @@ textarea {
 
   .brand__name {
     display: none;
+  }
+
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+
+  .field-row select {
+    width: 100%;
   }
 }
 

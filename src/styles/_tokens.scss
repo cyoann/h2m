@@ -23,4 +23,16 @@
 
   --topbar-height: 4.5rem;
   --content-max: 1180px;
+
+  --hero-padding-block: clamp(var(--space-6), 6vw, var(--space-8));
+  --panel-min-height: 32rem;
+  --editor-min-height: 22rem;
+  --panel-padding: var(--space-5);
+}
+
+:root[data-density="compact"] {
+  --hero-padding-block: var(--space-6);
+  --panel-min-height: 26rem;
+  --editor-min-height: 18rem;
+  --panel-padding: var(--space-4);
 }

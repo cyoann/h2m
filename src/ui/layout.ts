@@ -1,14 +1,30 @@
+import { applyUiPreferences, loadSettings, saveSettings, type AppSettings } from '../core/settings';
 import { createSettingsPanel } from './settings-panel';
 
 export function createLayout(): HTMLElement {
   const shell = document.createElement('div');
-  const settingsPanel = createSettingsPanel();
+
+  let settings = loadSettings();
 
   shell.className = 'app-shell';
+  applyUiPreferences(settings);
+
+  const handleSettingsChange = (nextSettings: AppSettings): void => {
+    settings = nextSettings;
+
+    saveSettings(settings);
+    applyUiPreferences(settings);
+    setStatus(shell, 'Settings saved');
+  };
+
+  const settingsPanel = createSettingsPanel({
+    settings,
+    onChange: handleSettingsChange,
+  });
 
   shell.innerHTML = `
     <header class="topbar">
-      <a class="brand" href="/" aria-label="h2m home">
+      <a class="brand" href="./" aria-label="h2m home">
         <span class="brand__mark">h2m</span>
         <span class="brand__name">HTML to Markdown</span>
       </a>
@@ -70,7 +86,7 @@ export function createLayout(): HTMLElement {
     </section>
 
     <footer class="statusbar" aria-live="polite">
-      <span>Ready</span>
+      <span data-status-primary>Ready</span>
       <span>Local only</span>
     </footer>
   `;
@@ -84,4 +100,12 @@ export function createLayout(): HTMLElement {
   });
 
   return shell;
+}
+
+function setStatus(root: HTMLElement, message: string): void {
+  const status = root.querySelector<HTMLElement>('[data-status-primary]');
+
+  if (status) {
+    status.textContent = message;
+  }
 }
