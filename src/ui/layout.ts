@@ -1,6 +1,13 @@
 import { convertHtmlToMarkdown } from '../core/converter';
 import { applyUiPreferences, loadSettings, saveSettings, type AppSettings } from '../core/settings';
 import { createSettingsPanel } from './settings-panel';
+import {
+  canReadPlainClipboard,
+  canWriteClipboard,
+  readClipboardEventPayload,
+  readSystemClipboardPayload,
+  type ClipboardPayload,
+} from './clipboard';
 
 interface LayoutControls {
   input: HTMLTextAreaElement;
@@ -167,7 +174,7 @@ export function createLayout(): HTMLElement {
 
   const controls = getLayoutControls(shell);
 
-  controls.pasteButton.disabled = !canReadClipboard();
+  controls.pasteButton.disabled = !canReadPlainClipboard();
   controls.clearButton.disabled = true;
 
   controls.settingsButton.addEventListener('click', () => {
@@ -176,6 +183,18 @@ export function createLayout(): HTMLElement {
 
   controls.input.addEventListener('input', () => {
     renderConversion();
+  });
+
+  controls.input.addEventListener('paste', (event) => {
+    const payload = readClipboardEventPayload(event);
+
+    if (!payload) {
+      return;
+    }
+
+    event.preventDefault();
+    insertAtSelection(controls.input, payload.content);
+    renderConversion(getPasteStatus(payload));
   });
 
   controls.pasteButton.addEventListener('click', async () => {
@@ -212,18 +231,14 @@ export function createLayout(): HTMLElement {
   return shell;
 
   async function pasteFromClipboard(): Promise<void> {
-    if (!canReadClipboard()) {
-      setStatus('Clipboard paste unavailable', 'Use keyboard paste instead');
-      controls.input.focus();
-      return;
-    }
-
     try {
-      controls.input.value = await navigator.clipboard.readText();
-      renderConversion('Pasted from clipboard');
+      const payload = await readSystemClipboardPayload();
+
+      controls.input.value = payload.content;
+      renderConversion(getPasteStatus(payload));
       controls.input.focus();
     } catch {
-      setStatus('Clipboard paste denied', 'Use keyboard paste instead');
+      setStatus('Clipboard paste denied', 'Use Ctrl/Cmd+V inside the HTML panel');
       controls.input.focus();
     }
   }
@@ -367,12 +382,15 @@ function getPrimaryStatus(inputCharacters: number): string {
   return inputCharacters === 0 ? 'Ready' : 'Converted';
 }
 
-function canReadClipboard(): boolean {
-  return window.isSecureContext && typeof navigator.clipboard?.readText === 'function';
+function insertAtSelection(textarea: HTMLTextAreaElement, value: string): void {
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+
+  textarea.setRangeText(value, start, end, 'end');
 }
 
-function canWriteClipboard(): boolean {
-  return window.isSecureContext && typeof navigator.clipboard?.writeText === 'function';
+function getPasteStatus(payload: ClipboardPayload): string {
+  return payload.format === 'html' ? 'Pasted HTML from clipboard' : 'Pasted plain text from clipboard';
 }
 
 function formatNumber(value: number): string {
