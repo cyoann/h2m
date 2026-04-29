@@ -3,11 +3,20 @@ export type CodeBlockStyle = 'indented' | 'fenced';
 export type BulletListMarker = '-' | '+' | '*';
 export type ThemePreference = 'system' | 'light' | 'dark';
 
+export type LinkMode = 'preserve' | 'text';
+export type ImageMode = 'markdown' | 'alt' | 'remove';
+
 export interface AppSettings {
   headingStyle: HeadingStyle;
   codeBlockStyle: CodeBlockStyle;
   bulletListMarker: BulletListMarker;
   removeComments: boolean;
+
+  linkMode: LinkMode;
+  imageMode: ImageMode;
+  enableStrikethrough: boolean;
+  preserveTables: boolean;
+
   theme: ThemePreference;
   zenDensity: boolean;
 }
@@ -18,12 +27,20 @@ const headingStyles = ['setext', 'atx'] as const;
 const codeBlockStyles = ['indented', 'fenced'] as const;
 const bulletListMarkers = ['-', '+', '*'] as const;
 const themePreferences = ['system', 'light', 'dark'] as const;
+const linkModes = ['preserve', 'text'] as const;
+const imageModes = ['markdown', 'alt', 'remove'] as const;
 
 export const DEFAULT_SETTINGS: AppSettings = {
   headingStyle: 'atx',
   codeBlockStyle: 'fenced',
   bulletListMarker: '-',
   removeComments: true,
+
+  linkMode: 'preserve',
+  imageMode: 'markdown',
+  enableStrikethrough: true,
+  preserveTables: true,
+
   theme: 'system',
   zenDensity: true,
 };
@@ -63,6 +80,12 @@ function parseSettings(value: unknown): AppSettings {
     codeBlockStyle: readChoice(value.codeBlockStyle, codeBlockStyles, DEFAULT_SETTINGS.codeBlockStyle),
     bulletListMarker: readChoice(value.bulletListMarker, bulletListMarkers, DEFAULT_SETTINGS.bulletListMarker),
     removeComments: readBoolean(value.removeComments, DEFAULT_SETTINGS.removeComments),
+
+    linkMode: readChoice(value.linkMode, linkModes, DEFAULT_SETTINGS.linkMode),
+    imageMode: readChoice(value.imageMode, imageModes, DEFAULT_SETTINGS.imageMode),
+    enableStrikethrough: readBoolean(value.enableStrikethrough, DEFAULT_SETTINGS.enableStrikethrough),
+    preserveTables: readBoolean(value.preserveTables, DEFAULT_SETTINGS.preserveTables),
+
     theme: readChoice(value.theme, themePreferences, DEFAULT_SETTINGS.theme),
     zenDensity: readBoolean(value.zenDensity, DEFAULT_SETTINGS.zenDensity),
   };

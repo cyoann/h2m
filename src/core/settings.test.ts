@@ -46,6 +46,12 @@ describe('settings', () => {
         codeBlockStyle: 'wrong',
         bulletListMarker: '~',
         removeComments: 'yes',
+
+        linkMode: 'external',
+        imageMode: 'base64',
+        enableStrikethrough: 'sometimes',
+        preserveTables: 'maybe',
+
         theme: 'solarized',
         zenDensity: 'no',
       }),
@@ -62,6 +68,12 @@ describe('settings', () => {
       codeBlockStyle: 'indented',
       bulletListMarker: '*',
       removeComments: false,
+
+      linkMode: 'text',
+      imageMode: 'alt',
+      enableStrikethrough: false,
+      preserveTables: false,
+
       theme: 'dark',
       zenDensity: false,
     };

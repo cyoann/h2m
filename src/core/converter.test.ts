@@ -67,6 +67,67 @@ describe('convertHtmlToMarkdown', () => {
     expect(result.markdown).toBe('~~Deleted~~ ~~Removed~~ ~~Old~~');
   });
 
+  it('can convert links to text only', () => {
+    const result = convertHtmlToMarkdown('<p>Read <a href="https://example.com">the article</a>.</p>', {
+      ...DEFAULT_SETTINGS,
+      linkMode: 'text',
+    });
+
+    expect(result.markdown).toBe('Read the article.');
+  });
+
+  it('can convert images to alt text only', () => {
+    const result = convertHtmlToMarkdown('<p><img src="photo.jpg" alt="A quiet desk"></p>', {
+      ...DEFAULT_SETTINGS,
+      imageMode: 'alt',
+    });
+
+    expect(result.markdown).toBe('A quiet desk');
+  });
+
+  it('can remove images', () => {
+    const result = convertHtmlToMarkdown('<p>Before <img src="photo.jpg" alt="A quiet desk"> After</p>', {
+      ...DEFAULT_SETTINGS,
+      imageMode: 'remove',
+    });
+
+    expect(result.markdown).toBe('Before  After');
+  });
+
+  it('can disable strikethrough syntax', () => {
+    const result = convertHtmlToMarkdown('<p><del>Deleted</del></p>', {
+      ...DEFAULT_SETTINGS,
+      enableStrikethrough: false,
+    });
+
+    expect(result.markdown).toBe('Deleted');
+  });
+
+  it('can preserve sanitized tables as HTML', () => {
+    const result = convertHtmlToMarkdown(
+      `
+      <table style="color:red">
+        <tr>
+          <th>Name</th>
+          <th>Value</th>
+        </tr>
+        <tr>
+          <td>One</td>
+          <td>1</td>
+        </tr>
+      </table>
+    `,
+      {
+        ...DEFAULT_SETTINGS,
+        preserveTables: true,
+      },
+    );
+
+    expect(result.markdown).toContain('<table>');
+    expect(result.markdown).toContain('<th>Name</th>');
+    expect(result.markdown).not.toContain('style=');
+  });
+
   it('returns empty Markdown for empty sanitized input', () => {
     const result = convertHtmlToMarkdown('<script>alert("bad")</script>', DEFAULT_SETTINGS);
 

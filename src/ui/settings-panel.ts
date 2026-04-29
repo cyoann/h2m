@@ -4,6 +4,8 @@ import {
   type BulletListMarker,
   type CodeBlockStyle,
   type HeadingStyle,
+  type ImageMode,
+  type LinkMode,
   type ThemePreference,
 } from '../core/settings';
 
@@ -16,6 +18,8 @@ const headingStyles = ['atx', 'setext'] as const satisfies readonly HeadingStyle
 const codeBlockStyles = ['fenced', 'indented'] as const satisfies readonly CodeBlockStyle[];
 const bulletListMarkers = ['-', '*', '+'] as const satisfies readonly BulletListMarker[];
 const themePreferences = ['system', 'light', 'dark'] as const satisfies readonly ThemePreference[];
+const linkModes = ['preserve', 'text'] as const satisfies readonly LinkMode[];
+const imageModes = ['markdown', 'alt', 'remove'] as const satisfies readonly ImageMode[];
 
 export function createSettingsPanel({ settings, onChange }: SettingsPanelOptions): HTMLDialogElement {
   const dialog = document.createElement('dialog');
@@ -38,7 +42,7 @@ export function createSettingsPanel({ settings, onChange }: SettingsPanelOptions
 
       <div class="settings-card__body">
         <fieldset class="setting-group">
-          <legend>Conversion</legend>
+          <legend>Conversion format</legend>
 
           <label class="field-row">
             <span>
@@ -72,6 +76,49 @@ export function createSettingsPanel({ settings, onChange }: SettingsPanelOptions
               <option value="*" ${selected(settings.bulletListMarker, '*')}>Asterisk — *</option>
               <option value="+" ${selected(settings.bulletListMarker, '+')}>Plus — +</option>
             </select>
+          </label>
+        </fieldset>
+
+        <fieldset class="setting-group">
+          <legend>Rules</legend>
+
+          <label class="field-row">
+            <span>
+              <strong>Links</strong>
+              <small>Preserve destinations or keep readable text only.</small>
+            </span>
+            <select name="linkMode">
+              <option value="preserve" ${selected(settings.linkMode, 'preserve')}>Preserve Markdown links</option>
+              <option value="text" ${selected(settings.linkMode, 'text')}>Text only</option>
+            </select>
+          </label>
+
+          <label class="field-row">
+            <span>
+              <strong>Images</strong>
+              <small>Choose how copied article images should appear.</small>
+            </span>
+            <select name="imageMode">
+              <option value="markdown" ${selected(settings.imageMode, 'markdown')}>Markdown images</option>
+              <option value="alt" ${selected(settings.imageMode, 'alt')}>Alt text only</option>
+              <option value="remove" ${selected(settings.imageMode, 'remove')}>Remove images</option>
+            </select>
+          </label>
+
+          <label class="check-row">
+            <input type="checkbox" name="enableStrikethrough" ${checked(settings.enableStrikethrough)} />
+            <span>
+              <strong>Strikethrough</strong>
+              <small>Convert deleted text into ~~Markdown~~ syntax.</small>
+            </span>
+          </label>
+
+          <label class="check-row">
+            <input type="checkbox" name="preserveTables" ${checked(settings.preserveTables)} />
+            <span>
+              <strong>Preserve tables as HTML</strong>
+              <small>Keep sanitized tables instead of flattening their text.</small>
+            </span>
           </label>
 
           <label class="check-row">
@@ -150,6 +197,12 @@ function readSettingsFromForm(form: HTMLFormElement): AppSettings {
     codeBlockStyle: readChoice(data.get('codeBlockStyle'), codeBlockStyles, DEFAULT_SETTINGS.codeBlockStyle),
     bulletListMarker: readChoice(data.get('bulletListMarker'), bulletListMarkers, DEFAULT_SETTINGS.bulletListMarker),
     removeComments: data.get('removeComments') === 'on',
+
+    linkMode: readChoice(data.get('linkMode'), linkModes, DEFAULT_SETTINGS.linkMode),
+    imageMode: readChoice(data.get('imageMode'), imageModes, DEFAULT_SETTINGS.imageMode),
+    enableStrikethrough: data.get('enableStrikethrough') === 'on',
+    preserveTables: data.get('preserveTables') === 'on',
+
     theme: readChoice(data.get('theme'), themePreferences, DEFAULT_SETTINGS.theme),
     zenDensity: data.get('zenDensity') === 'on',
   };
@@ -159,8 +212,13 @@ function writeSettingsToForm(form: HTMLFormElement, settings: AppSettings): void
   getFormSelect(form, 'headingStyle').value = settings.headingStyle;
   getFormSelect(form, 'codeBlockStyle').value = settings.codeBlockStyle;
   getFormSelect(form, 'bulletListMarker').value = settings.bulletListMarker;
+  getFormSelect(form, 'linkMode').value = settings.linkMode;
+  getFormSelect(form, 'imageMode').value = settings.imageMode;
   getFormSelect(form, 'theme').value = settings.theme;
+
   getFormCheckbox(form, 'removeComments').checked = settings.removeComments;
+  getFormCheckbox(form, 'enableStrikethrough').checked = settings.enableStrikethrough;
+  getFormCheckbox(form, 'preserveTables').checked = settings.preserveTables;
   getFormCheckbox(form, 'zenDensity').checked = settings.zenDensity;
 }
 

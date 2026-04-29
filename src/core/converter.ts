@@ -47,16 +47,73 @@ function createTurndownService(settings: AppSettings): TurndownService {
 
   service.remove(['script', 'style', 'noscript']);
 
+  applyLinkRules(service, settings);
+  applyImageRules(service, settings);
+  applyStrikethroughRules(service, settings);
+  applyTableRules(service, settings);
+
+  return service;
+}
+
+function applyLinkRules(service: TurndownService, settings: AppSettings): void {
+  if (settings.linkMode === 'preserve') {
+    return;
+  }
+
+  service.addRule('linksAsText', {
+    filter(node) {
+      return node.nodeName === 'A';
+    },
+    replacement(content) {
+      return content;
+    },
+  });
+}
+
+function applyImageRules(service: TurndownService, settings: AppSettings): void {
+  if (settings.imageMode === 'markdown') {
+    return;
+  }
+
+  service.addRule('customImages', {
+    filter(node) {
+      return node.nodeName === 'IMG';
+    },
+    replacement(_content, node) {
+      if (!(node instanceof HTMLImageElement)) {
+        return '';
+      }
+
+      if (settings.imageMode === 'remove') {
+        return '';
+      }
+
+      return node.alt.trim();
+    },
+  });
+}
+
+function applyStrikethroughRules(service: TurndownService, settings: AppSettings): void {
   service.addRule('strikethrough', {
     filter(node) {
       return ['DEL', 'S', 'STRIKE'].includes(node.nodeName);
     },
     replacement(content) {
-      return content ? `~~${content}~~` : '';
+      if (!content) {
+        return '';
+      }
+
+      return settings.enableStrikethrough ? `~~${content}~~` : content;
     },
   });
+}
 
-  return service;
+function applyTableRules(service: TurndownService, settings: AppSettings): void {
+  if (!settings.preserveTables) {
+    return;
+  }
+
+  service.keep(['table']);
 }
 
 function normalizeMarkdown(markdown: string): string {
