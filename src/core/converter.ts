@@ -48,7 +48,9 @@ function createTurndownService(settings: AppSettings): TurndownService {
   service.remove(['script', 'style', 'noscript']);
 
   service.addRule('strikethrough', {
-    filter: ['del', 's', 'strike'],
+    filter(node) {
+      return ['DEL', 'S', 'STRIKE'].includes(node.nodeName);
+    },
     replacement(content) {
       return content ? `~~${content}~~` : '';
     },
