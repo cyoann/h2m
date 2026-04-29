@@ -8,8 +8,18 @@ interface LayoutControls {
   pasteButton: HTMLButtonElement;
   copyButton: HTMLButtonElement;
   clearButton: HTMLButtonElement;
+  settingsButton: HTMLButtonElement;
   statusPrimary: HTMLElement;
   statusSecondary: HTMLElement;
+  metricHtmlCharacters: HTMLElement;
+  metricMarkdownCharacters: HTMLElement;
+  metricMarkdownWords: HTMLElement;
+}
+
+interface OutputMetrics {
+  htmlCharacters: number;
+  markdownCharacters: number;
+  markdownWords: number;
 }
 
 export function createLayout(): HTMLElement {
@@ -41,7 +51,12 @@ export function createLayout(): HTMLElement {
       </a>
 
       <nav class="topbar__actions" aria-label="Application actions">
-        <button class="quiet-button" type="button" data-action="open-settings">
+        <button
+          class="quiet-button"
+          type="button"
+          data-action="open-settings"
+          title="Open settings"
+        >
           Settings
         </button>
       </nav>
@@ -64,10 +79,20 @@ export function createLayout(): HTMLElement {
           </div>
 
           <div class="panel__actions">
-            <button class="text-button" type="button" data-action="paste-html">
+            <button
+              class="text-button"
+              type="button"
+              data-action="paste-html"
+              title="Paste HTML from clipboard"
+            >
               Paste
             </button>
-            <button class="text-button" type="button" data-action="clear-html">
+            <button
+              class="text-button"
+              type="button"
+              data-action="clear-html"
+              title="Clear input"
+            >
               Clear
             </button>
           </div>
@@ -90,7 +115,13 @@ export function createLayout(): HTMLElement {
             <h2>Markdown</h2>
           </div>
 
-          <button class="text-button" type="button" data-action="copy-markdown" disabled>
+          <button
+            class="text-button"
+            type="button"
+            data-action="copy-markdown"
+            disabled
+            title="Copy Markdown to clipboard"
+          >
             Copy
           </button>
         </header>
@@ -108,8 +139,27 @@ export function createLayout(): HTMLElement {
     </section>
 
     <footer class="statusbar" aria-live="polite">
-      <span data-status-primary>Ready</span>
-      <span data-status-secondary>Local only</span>
+      <div class="statusbar__messages">
+        <span data-status-primary>Ready</span>
+        <span data-status-secondary>Local only</span>
+      </div>
+
+      <dl class="metrics" aria-label="Conversion metrics">
+        <div class="metric">
+          <dt>HTML</dt>
+          <dd data-metric-html-characters>0 chars</dd>
+        </div>
+
+        <div class="metric">
+          <dt>Markdown</dt>
+          <dd data-metric-markdown-characters>0 chars</dd>
+        </div>
+
+        <div class="metric">
+          <dt>Words</dt>
+          <dd data-metric-markdown-words>0</dd>
+        </div>
+      </dl>
     </footer>
   `;
 
@@ -120,7 +170,7 @@ export function createLayout(): HTMLElement {
   controls.pasteButton.disabled = !canReadClipboard();
   controls.clearButton.disabled = true;
 
-  shell.querySelector<HTMLButtonElement>('[data-action="open-settings"]')?.addEventListener('click', () => {
+  controls.settingsButton.addEventListener('click', () => {
     settingsPanel.showModal();
   });
 
@@ -129,24 +179,11 @@ export function createLayout(): HTMLElement {
   });
 
   controls.pasteButton.addEventListener('click', async () => {
-    try {
-      controls.input.value = await navigator.clipboard.readText();
-      renderConversion('Pasted from clipboard');
-      controls.input.focus();
-    } catch {
-      setStatus('Clipboard paste unavailable', 'Use keyboard paste instead');
-      controls.input.focus();
-    }
+    await pasteFromClipboard();
   });
 
   controls.copyButton.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(controls.output.value);
-      setStatus('Copied Markdown', `${controls.output.value.length} chars`);
-    } catch {
-      controls.output.select();
-      setStatus('Clipboard copy unavailable', 'Markdown selected');
-    }
+    await copyMarkdown();
   });
 
   controls.clearButton.addEventListener('click', () => {
@@ -155,29 +192,134 @@ export function createLayout(): HTMLElement {
     controls.input.focus();
   });
 
+  shell.addEventListener('keydown', async (event) => {
+    await handleShortcut(event, {
+      onPaste: pasteFromClipboard,
+      onCopy: copyMarkdown,
+      onClear: () => {
+        controls.input.value = '';
+        renderConversion('Cleared');
+        controls.input.focus();
+      },
+      onSettings: () => {
+        settingsPanel.showModal();
+      },
+    });
+  });
+
   renderConversion();
 
   return shell;
 
+  async function pasteFromClipboard(): Promise<void> {
+    if (!canReadClipboard()) {
+      setStatus('Clipboard paste unavailable', 'Use keyboard paste instead');
+      controls.input.focus();
+      return;
+    }
+
+    try {
+      controls.input.value = await navigator.clipboard.readText();
+      renderConversion('Pasted from clipboard');
+      controls.input.focus();
+    } catch {
+      setStatus('Clipboard paste denied', 'Use keyboard paste instead');
+      controls.input.focus();
+    }
+  }
+
+  async function copyMarkdown(): Promise<void> {
+    if (!controls.output.value) {
+      setStatus('Nothing to copy', 'Markdown output is empty');
+      return;
+    }
+
+    if (canWriteClipboard()) {
+      try {
+        await navigator.clipboard.writeText(controls.output.value);
+        setStatus('Copied Markdown', `${controls.output.value.length} chars`);
+        return;
+      } catch {
+        // Fall through to manual selection.
+      }
+    }
+
+    controls.output.focus();
+    controls.output.select();
+    setStatus('Markdown selected', 'Press Ctrl/Cmd+C to copy');
+  }
+
   function renderConversion(statusMessage?: string): void {
     const result = convertHtmlToMarkdown(controls.input.value, settings);
+    const metrics = getOutputMetrics(controls.input.value, result.markdown);
 
     controls.output.value = result.markdown;
     controls.copyButton.disabled = result.markdown.length === 0;
     controls.clearButton.disabled = controls.input.value.length === 0;
 
-    const primary = statusMessage ?? getPrimaryStatus(result.inputCharacters);
+    renderMetrics(metrics);
+
+    const primary = statusMessage ?? getPrimaryStatus(metrics.htmlCharacters);
     const secondary =
-      result.inputCharacters === 0
+      metrics.htmlCharacters === 0
         ? 'Local only'
-        : `${result.inputCharacters} HTML chars → ${result.outputCharacters} Markdown chars`;
+        : `${formatNumber(metrics.htmlCharacters)} HTML chars → ${formatNumber(
+            metrics.markdownCharacters,
+          )} Markdown chars`;
 
     setStatus(primary, secondary);
+  }
+
+  function renderMetrics(metrics: OutputMetrics): void {
+    controls.metricHtmlCharacters.textContent = `${formatNumber(metrics.htmlCharacters)} chars`;
+
+    controls.metricMarkdownCharacters.textContent = `${formatNumber(metrics.markdownCharacters)} chars`;
+
+    controls.metricMarkdownWords.textContent = formatNumber(metrics.markdownWords);
   }
 
   function setStatus(primary: string, secondary: string): void {
     controls.statusPrimary.textContent = primary;
     controls.statusSecondary.textContent = secondary;
+  }
+}
+
+interface ShortcutHandlers {
+  onPaste: () => Promise<void>;
+  onCopy: () => Promise<void>;
+  onClear: () => void;
+  onSettings: () => void;
+}
+
+async function handleShortcut(event: KeyboardEvent, handlers: ShortcutHandlers): Promise<void> {
+  const key = event.key.toLowerCase();
+  const hasPrimaryModifier = event.metaKey || event.ctrlKey;
+
+  if (!hasPrimaryModifier) {
+    return;
+  }
+
+  if (event.shiftKey && key === 'v') {
+    event.preventDefault();
+    await handlers.onPaste();
+    return;
+  }
+
+  if (event.shiftKey && key === 'c') {
+    event.preventDefault();
+    await handlers.onCopy();
+    return;
+  }
+
+  if (event.shiftKey && key === 'x') {
+    event.preventDefault();
+    handlers.onClear();
+    return;
+  }
+
+  if (key === ',') {
+    event.preventDefault();
+    handlers.onSettings();
   }
 }
 
@@ -188,8 +330,12 @@ function getLayoutControls(root: HTMLElement): LayoutControls {
     pasteButton: getRequiredElement(root, '[data-action="paste-html"]', HTMLButtonElement),
     copyButton: getRequiredElement(root, '[data-action="copy-markdown"]', HTMLButtonElement),
     clearButton: getRequiredElement(root, '[data-action="clear-html"]', HTMLButtonElement),
+    settingsButton: getRequiredElement(root, '[data-action="open-settings"]', HTMLButtonElement),
     statusPrimary: getRequiredElement(root, '[data-status-primary]', HTMLElement),
     statusSecondary: getRequiredElement(root, '[data-status-secondary]', HTMLElement),
+    metricHtmlCharacters: getRequiredElement(root, '[data-metric-html-characters]', HTMLElement),
+    metricMarkdownCharacters: getRequiredElement(root, '[data-metric-markdown-characters]', HTMLElement),
+    metricMarkdownWords: getRequiredElement(root, '[data-metric-markdown-words]', HTMLElement),
   };
 }
 
@@ -203,10 +349,32 @@ function getRequiredElement<T extends HTMLElement>(root: HTMLElement, selector: 
   return element;
 }
 
+function getOutputMetrics(html: string, markdown: string): OutputMetrics {
+  return {
+    htmlCharacters: html.length,
+    markdownCharacters: markdown.length,
+    markdownWords: countWords(markdown),
+  };
+}
+
+function countWords(value: string): number {
+  const words = value.trim().match(/\S+/g);
+
+  return words?.length ?? 0;
+}
+
 function getPrimaryStatus(inputCharacters: number): string {
   return inputCharacters === 0 ? 'Ready' : 'Converted';
 }
 
 function canReadClipboard(): boolean {
-  return typeof navigator.clipboard?.readText === 'function';
+  return window.isSecureContext && typeof navigator.clipboard?.readText === 'function';
+}
+
+function canWriteClipboard(): boolean {
+  return window.isSecureContext && typeof navigator.clipboard?.writeText === 'function';
+}
+
+function formatNumber(value: number): string {
+  return new Intl.NumberFormat().format(value);
 }

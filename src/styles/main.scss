@@ -232,6 +232,7 @@ textarea {
 
 .statusbar {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
   max-width: var(--content-max);
@@ -240,6 +241,44 @@ textarea {
   padding-block: var(--space-4);
   color: var(--color-faint);
   font-size: 0.78rem;
+}
+
+.statusbar__messages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.metrics {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.metric {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.metric dt,
+.metric dd {
+  margin: 0;
+}
+
+.metric dt {
+  color: var(--color-faint);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.metric dd {
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .settings-dialog {
@@ -437,6 +476,15 @@ textarea {
 
   .field-row select {
     width: 100%;
+  }
+
+  .statusbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .metrics {
+    justify-content: flex-start;
   }
 }
 
