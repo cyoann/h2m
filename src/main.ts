@@ -1,5 +1,4 @@
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <h1>Hello World</h1>
-  </div>
-`;
+import './styles/main.scss';
+import { startApp } from './app/app';
+
+startApp(document.querySelector<HTMLElement>('#app'));

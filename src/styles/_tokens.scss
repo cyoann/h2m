@@ -1,0 +1,26 @@
+:root {
+  --font-ui: "Avenir Next", "Segoe UI", sans-serif;
+  --font-editor: "Iosevka", "Cascadia Code", "SF Mono", monospace;
+  --font-serif: "Iowan Old Style", "Palatino", serif;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4.5rem;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+
+  --line-thin: 1px solid var(--color-line);
+
+  --shadow-soft: 0 24px 80px rgb(0 0 0 / 0.12);
+  --shadow-dialog: 0 32px 120px rgb(0 0 0 / 0.28);
+
+  --topbar-height: 4.5rem;
+  --content-max: 1180px;
+}
