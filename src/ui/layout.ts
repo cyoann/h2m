@@ -8,6 +8,7 @@ import {
   readSystemClipboardPayload,
   type ClipboardPayload,
 } from './clipboard';
+import { formatDraftTimestamp, loadDraft, removeDraft, saveDraft } from '../core/draft';
 import { deriveMarkdownFileName, downloadTextFile, isLikelyReadableTextFile, readTextFile } from './files';
 import { createSettingsPanel } from './settings-panel';
 
@@ -39,7 +40,12 @@ export function createLayout(): HTMLElement {
 
   let settings = loadSettings();
   let currentSourceName = 'h2m.html';
+  let restoredDraft = loadDraft();
   let dragDepth = 0;
+
+  if (restoredDraft) {
+    currentSourceName = restoredDraft.sourceName;
+  }
 
   shell.className = 'app-shell';
   applyUiPreferences(settings);
@@ -208,6 +214,10 @@ export function createLayout(): HTMLElement {
 
   const controls = getLayoutControls(shell);
 
+  if (restoredDraft) {
+    controls.input.value = restoredDraft.html;
+  }
+
   controls.pasteButton.disabled = !canReadPlainClipboard() && !canReadRichClipboard();
   controls.clearButton.disabled = true;
 
@@ -230,6 +240,7 @@ export function createLayout(): HTMLElement {
   });
 
   controls.input.addEventListener('input', () => {
+    persistCurrentDraft();
     renderConversion();
   });
 
@@ -243,6 +254,7 @@ export function createLayout(): HTMLElement {
     event.preventDefault();
     insertAtSelection(controls.input, payload.content);
     currentSourceName = 'clipboard.html';
+    persistCurrentDraft();
     renderConversion(getPasteStatus(payload));
   });
 
@@ -341,6 +353,7 @@ export function createLayout(): HTMLElement {
       currentSourceName = importedFile.name;
       controls.input.value = importedFile.content;
 
+      persistCurrentDraft();
       renderConversion(`Opened ${importedFile.name}`);
       controls.input.focus();
     } catch {
@@ -354,6 +367,7 @@ export function createLayout(): HTMLElement {
 
       currentSourceName = 'clipboard.html';
       controls.input.value = payload.content;
+      persistCurrentDraft();
       renderConversion(getPasteStatus(payload));
       controls.input.focus();
     } catch {
@@ -398,8 +412,20 @@ export function createLayout(): HTMLElement {
   function clearInput(): void {
     currentSourceName = 'h2m.html';
     controls.input.value = '';
+    removeDraft();
     renderConversion('Cleared');
     controls.input.focus();
+  }
+
+  function persistCurrentDraft(): void {
+    const saved = saveDraft({
+      html: controls.input.value,
+      sourceName: currentSourceName,
+    });
+
+    if (!saved) {
+      setStatus('Draft not saved', 'Browser storage unavailable');
+    }
   }
 
   function renderConversion(statusMessage?: string): void {
@@ -413,13 +439,20 @@ export function createLayout(): HTMLElement {
 
     renderMetrics(metrics);
 
-    const primary = statusMessage ?? getPrimaryStatus(metrics.htmlCharacters);
+    const primary =
+      statusMessage ??
+      (restoredDraft ? `Restored ${restoredDraft.sourceName}` : getPrimaryStatus(metrics.htmlCharacters));
+
     const secondary =
       metrics.htmlCharacters === 0
         ? 'Local only'
+        : restoredDraft
+        ? `Saved locally ${formatDraftTimestamp(restoredDraft.updatedAt)}`
         : `${formatNumber(metrics.htmlCharacters)} HTML chars → ${formatNumber(
             metrics.markdownCharacters,
           )} Markdown chars`;
+
+    restoredDraft = null;
 
     setStatus(primary, secondary);
   }
