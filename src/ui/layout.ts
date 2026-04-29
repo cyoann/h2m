@@ -64,151 +64,162 @@ export function createLayout(): HTMLElement {
   });
 
   shell.innerHTML = `
-    <header class="topbar">
-      <a class="brand" href="./" aria-label="h2m home">
-        <span class="brand__mark">h2m</span>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="h2m home">
+      <span class="brand__mark">h2m</span>
+      <span class="brand__text">
         <span class="brand__name">HTML to Markdown</span>
-      </a>
+        <span class="brand__tagline">private · offline · clean</span>
+      </span>
+    </a>
 
-      <nav class="topbar__actions" aria-label="Application actions">
-        <button
-          class="quiet-button"
-          type="button"
-          data-action="open-settings"
-          title="Open settings"
-        >
-          Settings
-        </button>
-      </nav>
-    </header>
+    <nav class="topbar__actions" aria-label="Application actions">
+      <button
+        class="quiet-button"
+        type="button"
+        data-action="open-settings"
+        title="Open settings"
+      >
+        Settings
+      </button>
+    </nav>
+  </header>
 
-    <section class="hero" aria-labelledby="app-title">
-      <p class="eyebrow">Offline-first converter</p>
-      <h1 id="app-title">Clean Markdown from unsafe HTML.</h1>
-      <p class="hero__copy">
-        Paste HTML. Sanitize it. Convert it. Keep the output plain, portable, and readable.
-      </p>
-    </section>
+  <section class="command-strip" aria-label="Primary workflow">
+    <div class="command-strip__intro">
+      <p class="eyebrow">Convert</p>
+      <h1>Paste a page. Keep the Markdown.</h1>
+    </div>
 
-    <section class="workspace" aria-label="HTML to Markdown workspace">
-      <article class="panel panel--input">
-        <header class="panel__header">
-          <div>
-            <p class="panel__kicker">Input</p>
-            <h2>HTML</h2>
-          </div>
+    <div class="command-strip__actions" aria-label="Input actions">
+      <button
+        class="primary-action"
+        type="button"
+        data-action="open-file"
+        title="Open an HTML or text file"
+      >
+        Open file
+      </button>
 
-          <div class="panel__actions">
-            <button
-              class="text-button"
-              type="button"
-              data-action="open-file"
-              title="Open an HTML or text file"
-            >
-              Open
-            </button>
-            <button
-              class="text-button"
-              type="button"
-              data-action="paste-html"
-              title="Paste HTML from clipboard"
-            >
-              Paste
-            </button>
-            <button
-              class="text-button"
-              type="button"
-              data-action="clear-html"
-              title="Clear input"
-            >
-              Clear
-            </button>
-          </div>
-        </header>
+      <button
+        class="secondary-action"
+        type="button"
+        data-action="paste-html"
+        title="Paste HTML from clipboard"
+      >
+        Paste HTML
+      </button>
 
-        <textarea
-          class="editor"
-          id="html-input"
-          name="html-input"
-          spellcheck="false"
-          placeholder="<h1>Hello h2m</h1>"
-          aria-label="HTML input"
-        ></textarea>
-      </article>
+      <button
+        class="secondary-action"
+        type="button"
+        data-action="clear-html"
+        title="Clear input"
+      >
+        Clear
+      </button>
+    </div>
+  </section>
 
-      <article class="panel panel--output">
-        <header class="panel__header">
-          <div>
-            <p class="panel__kicker">Output</p>
-            <h2>Markdown</h2>
-          </div>
+  <section class="workspace" aria-label="HTML to Markdown workspace">
+    <article class="panel panel--input">
+      <header class="panel__header">
+        <div>
+          <p class="panel__kicker">Source</p>
+          <h2>HTML</h2>
+        </div>
 
-          <div class="panel__actions">
-            <button
-              class="text-button"
-              type="button"
-              data-action="copy-markdown"
-              disabled
-              title="Copy Markdown to clipboard"
-            >
-              Copy
-            </button>
-            <button
-              class="text-button"
-              type="button"
-              data-action="download-markdown"
-              disabled
-              title="Download Markdown file"
-            >
-              Download
-            </button>
-          </div>
-        </header>
+        <p class="panel__hint">Paste rich web content or drop a file.</p>
+      </header>
 
-        <textarea
-          class="editor editor--output"
-          id="markdown-output"
-          name="markdown-output"
-          spellcheck="false"
-          readonly
-          placeholder="# Hello h2m"
-          aria-label="Markdown output"
-        ></textarea>
-      </article>
-    </section>
+      <textarea
+        class="editor"
+        id="html-input"
+        name="html-input"
+        spellcheck="false"
+        placeholder="<article>
+  <h1>Your copied page</h1>
+  <p>Paste rich HTML here.</p>
+</article>"
+        aria-label="HTML input"
+      ></textarea>
+    </article>
 
-    <input
-      class="file-input"
-      type="file"
-      data-file-input
-      accept=".html,.htm,.xhtml,.xml,.txt,text/html,text/plain,application/xhtml+xml,application/xml"
-      aria-label="Open HTML file"
-    />
+    <article class="panel panel--output">
+      <header class="panel__header">
+        <div>
+          <p class="panel__kicker">Result</p>
+          <h2>Markdown</h2>
+        </div>
 
-    <footer class="statusbar" aria-live="polite">
-      <div class="statusbar__messages">
-        <span data-status-primary>Ready</span>
-        <span data-status-secondary>Local only</span>
+        <div class="panel__actions">
+          <button
+            class="text-button"
+            type="button"
+            data-action="copy-markdown"
+            disabled
+            title="Copy Markdown to clipboard"
+          >
+            Copy
+          </button>
+          <button
+            class="text-button"
+            type="button"
+            data-action="download-markdown"
+            disabled
+            title="Download Markdown file"
+          >
+            Download
+          </button>
+        </div>
+      </header>
+
+      <textarea
+        class="editor editor--output"
+        id="markdown-output"
+        name="markdown-output"
+        spellcheck="false"
+        readonly
+        placeholder="# Your copied page
+
+Paste HTML on the left. Markdown appears here."
+        aria-label="Markdown output"
+      ></textarea>
+    </article>
+  </section>
+
+  <input
+    class="file-input"
+    type="file"
+    data-file-input
+    accept=".html,.htm,.xhtml,.xml,.txt,text/html,text/plain,application/xhtml+xml,application/xml"
+    aria-label="Open HTML file"
+  />
+
+  <footer class="statusbar" aria-live="polite">
+    <div class="statusbar__messages">
+      <span data-status-primary>Ready</span>
+      <span data-status-secondary>Local only</span>
+    </div>
+
+    <dl class="metrics" aria-label="Conversion metrics">
+      <div class="metric">
+        <dt>HTML</dt>
+        <dd data-metric-html-characters>0 chars</dd>
       </div>
 
-      <dl class="metrics" aria-label="Conversion metrics">
-        <div class="metric">
-          <dt>HTML</dt>
-          <dd data-metric-html-characters>0 chars</dd>
-        </div>
+      <div class="metric">
+        <dt>Markdown</dt>
+        <dd data-metric-markdown-characters>0 chars</dd>
+      </div>
 
-        <div class="metric">
-          <dt>Markdown</dt>
-          <dd data-metric-markdown-characters>0 chars</dd>
-        </div>
-
-        <div class="metric">
-          <dt>Words</dt>
-          <dd data-metric-markdown-words>0</dd>
-        </div>
-      </dl>
-    </footer>
-  `;
+      <div class="metric">
+        <dt>Words</dt>
+        <dd data-metric-markdown-words>0</dd>
+      </div>
+    </dl>
+  </footer>
+`;
 
   shell.append(settingsPanel);
 

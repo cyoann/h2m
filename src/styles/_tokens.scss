@@ -9,30 +9,28 @@
   --space-4: 1rem;
   --space-5: 1.5rem;
   --space-6: 2rem;
-  --space-7: 3rem;
-  --space-8: 4.5rem;
 
-  --radius-sm: 0.5rem;
-  --radius-md: 0.875rem;
-  --radius-lg: 1.25rem;
+  --radius-sm: 0.45rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.05rem;
 
   --line-thin: 1px solid var(--color-line);
 
-  --shadow-soft: 0 24px 80px rgb(0 0 0 / 0.12);
+  --shadow-soft: 0 24px 80px rgb(0 0 0 / 0.1);
   --shadow-dialog: 0 32px 120px rgb(0 0 0 / 0.28);
 
-  --topbar-height: 4.5rem;
-  --content-max: 1180px;
-
-  --hero-padding-block: clamp(var(--space-6), 6vw, var(--space-8));
-  --panel-min-height: 32rem;
-  --editor-min-height: 22rem;
-  --panel-padding: var(--space-5);
+  --page-inset: clamp(0.75rem, 1.8vw, 1.5rem);
+  --topbar-height: 4rem;
+  --command-height: 4.75rem;
+  --status-height: 3.25rem;
+  --panel-padding: clamp(0.875rem, 1.3vw, 1.25rem);
+  --editor-font-size: clamp(0.88rem, 0.85vw, 0.98rem);
 }
 
 :root[data-density="compact"] {
-  --hero-padding-block: var(--space-6);
-  --panel-min-height: 26rem;
-  --editor-min-height: 18rem;
-  --panel-padding: var(--space-4);
+  --page-inset: 0.75rem;
+  --command-height: 4rem;
+  --status-height: 2.75rem;
+  --panel-padding: 0.875rem;
+  --editor-font-size: 0.88rem;
 }

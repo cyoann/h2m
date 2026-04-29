@@ -2,17 +2,21 @@
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --color-bg: #f7f4ee;
+  --color-bg: #f3efe6;
+  --color-bg-elevated: #faf7f0;
   --color-surface: #fffdf8;
   --color-surface-raised: #ffffff;
-  --color-text: #181714;
-  --color-muted: #706c63;
-  --color-faint: #9a9488;
-  --color-line: #ded8cc;
-  --color-accent: #2f4f46;
-  --color-accent-strong: #18372f;
+  --color-text: #171511;
+  --color-muted: #726d63;
+  --color-faint: #a49d90;
+  --color-line: #ddd5c6;
+  --color-line-strong: #c9beab;
+  --color-accent: #243f38;
+  --color-accent-soft: #e3ebe5;
+  --color-accent-strong: #142a25;
   --color-editor: #fbf8f1;
-  --color-selection: rgb(47 79 70 / 0.18);
+  --color-selection: rgb(36 63 56 / 0.16);
+  --color-glow: rgb(36 63 56 / 0.08);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -20,32 +24,40 @@
   :root[data-theme="system"] {
     color-scheme: dark;
 
-    --color-bg: #151515;
-    --color-surface: #1b1b1a;
-    --color-surface-raised: #22211f;
-    --color-text: #f1eee7;
-    --color-muted: #aaa49a;
-    --color-faint: #777168;
-    --color-line: #34322f;
-    --color-accent: #b9cbbf;
-    --color-accent-strong: #d8e6dc;
+    --color-bg: #121211;
+    --color-bg-elevated: #171716;
+    --color-surface: #1d1c1a;
+    --color-surface-raised: #24221f;
+    --color-text: #f2eee6;
+    --color-muted: #aca499;
+    --color-faint: #7c756b;
+    --color-line: #34302b;
+    --color-line-strong: #484239;
+    --color-accent: #d4ded7;
+    --color-accent-soft: #29342f;
+    --color-accent-strong: #edf5ef;
     --color-editor: #10100f;
-    --color-selection: rgb(185 203 191 / 0.2);
+    --color-selection: rgb(212 222 215 / 0.18);
+    --color-glow: rgb(212 222 215 / 0.06);
   }
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --color-bg: #151515;
-  --color-surface: #1b1b1a;
-  --color-surface-raised: #22211f;
-  --color-text: #f1eee7;
-  --color-muted: #aaa49a;
-  --color-faint: #777168;
-  --color-line: #34322f;
-  --color-accent: #b9cbbf;
-  --color-accent-strong: #d8e6dc;
+  --color-bg: #121211;
+  --color-bg-elevated: #171716;
+  --color-surface: #1d1c1a;
+  --color-surface-raised: #24221f;
+  --color-text: #f2eee6;
+  --color-muted: #aca499;
+  --color-faint: #7c756b;
+  --color-line: #34302b;
+  --color-line-strong: #484239;
+  --color-accent: #d4ded7;
+  --color-accent-soft: #29342f;
+  --color-accent-strong: #edf5ef;
   --color-editor: #10100f;
-  --color-selection: rgb(185 203 191 / 0.2);
+  --color-selection: rgb(212 222 215 / 0.18);
+  --color-glow: rgb(212 222 215 / 0.06);
 }
