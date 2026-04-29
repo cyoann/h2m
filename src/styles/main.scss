@@ -147,14 +147,10 @@ textarea {
   box-shadow: var(--shadow-soft);
 }
 
-.panel__header {
+.panel__actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  min-height: 5.75rem;
-  padding: var(--panel-padding);
-  border-bottom: var(--line-thin);
+  gap: var(--space-2);
 }
 
 .panel h2 {
@@ -420,6 +416,15 @@ textarea {
 
   .panel {
     min-height: 28rem;
+  }
+
+  .panel__header {
+    align-items: flex-start;
+  }
+
+  .panel__actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
   .brand__name {

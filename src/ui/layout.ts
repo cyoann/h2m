@@ -1,5 +1,16 @@
+import { convertHtmlToMarkdown } from '../core/converter';
 import { applyUiPreferences, loadSettings, saveSettings, type AppSettings } from '../core/settings';
 import { createSettingsPanel } from './settings-panel';
+
+interface LayoutControls {
+  input: HTMLTextAreaElement;
+  output: HTMLTextAreaElement;
+  pasteButton: HTMLButtonElement;
+  copyButton: HTMLButtonElement;
+  clearButton: HTMLButtonElement;
+  statusPrimary: HTMLElement;
+  statusSecondary: HTMLElement;
+}
 
 export function createLayout(): HTMLElement {
   const shell = document.createElement('div');
@@ -14,7 +25,7 @@ export function createLayout(): HTMLElement {
 
     saveSettings(settings);
     applyUiPreferences(settings);
-    setStatus(shell, 'Settings saved');
+    renderConversion('Settings saved');
   };
 
   const settingsPanel = createSettingsPanel({
@@ -51,7 +62,15 @@ export function createLayout(): HTMLElement {
             <p class="panel__kicker">Input</p>
             <h2>HTML</h2>
           </div>
-          <button class="text-button" type="button" disabled>Paste</button>
+
+          <div class="panel__actions">
+            <button class="text-button" type="button" data-action="paste-html">
+              Paste
+            </button>
+            <button class="text-button" type="button" data-action="clear-html">
+              Clear
+            </button>
+          </div>
         </header>
 
         <textarea
@@ -70,7 +89,10 @@ export function createLayout(): HTMLElement {
             <p class="panel__kicker">Output</p>
             <h2>Markdown</h2>
           </div>
-          <button class="text-button" type="button" disabled>Copy</button>
+
+          <button class="text-button" type="button" data-action="copy-markdown" disabled>
+            Copy
+          </button>
         </header>
 
         <textarea
@@ -87,25 +109,104 @@ export function createLayout(): HTMLElement {
 
     <footer class="statusbar" aria-live="polite">
       <span data-status-primary>Ready</span>
-      <span>Local only</span>
+      <span data-status-secondary>Local only</span>
     </footer>
   `;
 
   shell.append(settingsPanel);
 
-  const openSettingsButton = shell.querySelector<HTMLButtonElement>('[data-action="open-settings"]');
+  const controls = getLayoutControls(shell);
 
-  openSettingsButton?.addEventListener('click', () => {
+  controls.pasteButton.disabled = !canReadClipboard();
+  controls.clearButton.disabled = true;
+
+  shell.querySelector<HTMLButtonElement>('[data-action="open-settings"]')?.addEventListener('click', () => {
     settingsPanel.showModal();
   });
 
+  controls.input.addEventListener('input', () => {
+    renderConversion();
+  });
+
+  controls.pasteButton.addEventListener('click', async () => {
+    try {
+      controls.input.value = await navigator.clipboard.readText();
+      renderConversion('Pasted from clipboard');
+      controls.input.focus();
+    } catch {
+      setStatus('Clipboard paste unavailable', 'Use keyboard paste instead');
+      controls.input.focus();
+    }
+  });
+
+  controls.copyButton.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(controls.output.value);
+      setStatus('Copied Markdown', `${controls.output.value.length} chars`);
+    } catch {
+      controls.output.select();
+      setStatus('Clipboard copy unavailable', 'Markdown selected');
+    }
+  });
+
+  controls.clearButton.addEventListener('click', () => {
+    controls.input.value = '';
+    renderConversion('Cleared');
+    controls.input.focus();
+  });
+
+  renderConversion();
+
   return shell;
+
+  function renderConversion(statusMessage?: string): void {
+    const result = convertHtmlToMarkdown(controls.input.value, settings);
+
+    controls.output.value = result.markdown;
+    controls.copyButton.disabled = result.markdown.length === 0;
+    controls.clearButton.disabled = controls.input.value.length === 0;
+
+    const primary = statusMessage ?? getPrimaryStatus(result.inputCharacters);
+    const secondary =
+      result.inputCharacters === 0
+        ? 'Local only'
+        : `${result.inputCharacters} HTML chars → ${result.outputCharacters} Markdown chars`;
+
+    setStatus(primary, secondary);
+  }
+
+  function setStatus(primary: string, secondary: string): void {
+    controls.statusPrimary.textContent = primary;
+    controls.statusSecondary.textContent = secondary;
+  }
 }
 
-function setStatus(root: HTMLElement, message: string): void {
-  const status = root.querySelector<HTMLElement>('[data-status-primary]');
+function getLayoutControls(root: HTMLElement): LayoutControls {
+  return {
+    input: getRequiredElement(root, '#html-input', HTMLTextAreaElement),
+    output: getRequiredElement(root, '#markdown-output', HTMLTextAreaElement),
+    pasteButton: getRequiredElement(root, '[data-action="paste-html"]', HTMLButtonElement),
+    copyButton: getRequiredElement(root, '[data-action="copy-markdown"]', HTMLButtonElement),
+    clearButton: getRequiredElement(root, '[data-action="clear-html"]', HTMLButtonElement),
+    statusPrimary: getRequiredElement(root, '[data-status-primary]', HTMLElement),
+    statusSecondary: getRequiredElement(root, '[data-status-secondary]', HTMLElement),
+  };
+}
 
-  if (status) {
-    status.textContent = message;
+function getRequiredElement<T extends HTMLElement>(root: HTMLElement, selector: string, constructor: new () => T): T {
+  const element = root.querySelector(selector);
+
+  if (!(element instanceof constructor)) {
+    throw new Error(`h2m layout failed to find required element: ${selector}`);
   }
+
+  return element;
+}
+
+function getPrimaryStatus(inputCharacters: number): string {
+  return inputCharacters === 0 ? 'Ready' : 'Converted';
+}
+
+function canReadClipboard(): boolean {
+  return typeof navigator.clipboard?.readText === 'function';
 }

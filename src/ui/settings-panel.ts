@@ -156,12 +156,32 @@ function readSettingsFromForm(form: HTMLFormElement): AppSettings {
 }
 
 function writeSettingsToForm(form: HTMLFormElement, settings: AppSettings): void {
-  form.headingStyle.value = settings.headingStyle;
-  form.codeBlockStyle.value = settings.codeBlockStyle;
-  form.bulletListMarker.value = settings.bulletListMarker;
-  form.theme.value = settings.theme;
-  form.removeComments.checked = settings.removeComments;
-  form.zenDensity.checked = settings.zenDensity;
+  getFormSelect(form, 'headingStyle').value = settings.headingStyle;
+  getFormSelect(form, 'codeBlockStyle').value = settings.codeBlockStyle;
+  getFormSelect(form, 'bulletListMarker').value = settings.bulletListMarker;
+  getFormSelect(form, 'theme').value = settings.theme;
+  getFormCheckbox(form, 'removeComments').checked = settings.removeComments;
+  getFormCheckbox(form, 'zenDensity').checked = settings.zenDensity;
+}
+
+function getFormSelect(form: HTMLFormElement, name: string): HTMLSelectElement {
+  const field = form.elements.namedItem(name);
+
+  if (!(field instanceof HTMLSelectElement)) {
+    throw new Error(`Missing settings select: ${name}`);
+  }
+
+  return field;
+}
+
+function getFormCheckbox(form: HTMLFormElement, name: string): HTMLInputElement {
+  const field = form.elements.namedItem(name);
+
+  if (!(field instanceof HTMLInputElement) || field.type !== 'checkbox') {
+    throw new Error(`Missing settings checkbox: ${name}`);
+  }
+
+  return field;
 }
 
 function readChoice<T extends string>(value: FormDataEntryValue | null, allowedValues: readonly T[], fallback: T): T {
