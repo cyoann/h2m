@@ -1,3 +1,5 @@
+/// <reference types="vitest" />
+
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -70,5 +72,12 @@ export default defineConfig({
 
   preview: {
     open: true,
+  },
+
+  test: {
+    environment: 'jsdom',
+    include: ['src/**/*.test.ts'],
+    globals: false,
+    clearMocks: true,
   },
 });
