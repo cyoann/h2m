@@ -1,106 +1,111 @@
-# h2m
+<p align="center">
+  <a href="https://cyoann.github.io/h2m/">
+    <img src="public/logo.svg" width="96" height="96" alt="h2m logo">
+  </a>
+</p>
 
-h2m turns copied web pages and local HTML files into clean Markdown in your browser.
+<h1 align="center">h2m</h1>
 
-It runs entirely in the browser. Paste rich web-page HTML, open or drop a local HTML/text file, and export clean Markdown without sending content to a server.
+<p align="center">
+  Convert HTML to clean Markdown in your browser.
+</p>
+
+<p align="center">
+  <a href="https://cyoann.github.io/h2m/">Open the app</a>
+  ·
+  <a href="#features">Features</a>
+  ·
+  <a href="#markdown-output">Markdown output</a>
+  ·
+  <a href="#development">Development</a>
+</p>
+
+---
+
+## Overview
+
+h2m is a lightweight, offline-first HTML-to-Markdown converter.
+
+Paste copied web-page HTML, open a local HTML or text file, and export Markdown. The conversion happens locally in the browser: no backend, no account, no analytics, no telemetry.
 
 ## Features
 
-- Converts pasted rich HTML to Markdown.
-- Opens or drag-drops local `.html`, `.htm`, `.xhtml`, `.xml`, and `.txt` files.
-- Sanitizes user HTML with DOMPurify before conversion.
-- Converts sanitized HTML with Turndown.js.
-- Defaults to GitHub Flavored Markdown-friendly output.
-- Preserves configurable conversion settings:
-  - heading style
-  - code block style
-  - detected code block languages
-  - bullet marker
-  - link handling
-  - image handling
-  - strikethrough
-  - task list items
-  - table output mode
-  - comment removal
-- Persists user settings locally.
-- Persists the current draft locally.
-- Copies Markdown to the clipboard.
-- Downloads Markdown as a `.md` file.
-- Works as an offline-capable PWA.
-
-## Security model
-
-User-provided HTML is treated as unsafe.
-
-The conversion pipeline is:
-
-1. Read HTML or text input.
-2. Sanitize input through DOMPurify.
-3. Convert sanitized HTML through Turndown.js.
-4. Render Markdown output as plain text.
-
-The app does not render user-provided HTML directly into the page.
+- Paste rich HTML from web pages.
+- Open or drag-drop `.html`, `.htm`, `.xhtml`, `.xml`, and `.txt` files.
+- Sanitize user-provided HTML before conversion.
+- Convert sanitized HTML to Markdown.
+- Copy Markdown to the clipboard.
+- Download Markdown as a `.md` file.
+- Restore local draft input.
+- Persist conversion preferences locally.
+- Work offline as a Progressive Web App.
 
 ## Markdown output
 
-The default output targets GitHub Flavored Markdown-compatible documents:
+h2m defaults to GitHub Flavored Markdown-friendly output:
 
-- ATX headings such as `# Heading`.
-- Fenced code blocks with detected language names when available.
-- Markdown links and images by default.
-- Strikethrough syntax with `~~text~~`.
-- Task list items from checkbox list markup: `- [ ]` and `- [x]`.
-- Simple HTML tables as Markdown tables.
-- Table captions before Markdown tables.
-- Table cell alignment, escaped pipes, cell line breaks, and basic `colspan` padding.
+| Area | Default behavior |
+| --- | --- |
+| Headings | ATX headings, for example `# Heading` |
+| Code blocks | Fenced code blocks |
+| Code language | Preserved when detected from common highlight classes |
+| Lists | `-` bullet marker |
+| Links | Markdown links |
+| Images | Markdown images |
+| Strikethrough | `~~text~~` |
+| Task lists | `- [ ]` and `- [x]` |
+| Tables | Markdown tables when the source table can be represented safely |
 
-Tables are configurable because HTML tables vary widely:
+Table handling is configurable:
 
-- **Markdown table**: best for simple data tables. Complex tables that would lose structure are preserved as sanitized HTML.
-- **Sanitized HTML**: best for nested or layout-heavy tables.
-- **Plain text**: best when users only want readable cell text.
+- **Markdown table** for simple data tables.
+- **Sanitized HTML** for complex tables that would lose structure.
+- **Plain text** for readable cell content without table syntax.
 
-Known Markdown table limits:
+Known table limits:
 
 - `rowspan` has no faithful GitHub Flavored Markdown equivalent.
-- Tables with block content such as lists, headings, blockquotes, horizontal rules, code blocks, or nested tables may be kept as sanitized HTML in Markdown table mode.
+- Layout-heavy or nested tables may be preserved as sanitized HTML.
+- Tables containing block content such as lists, headings, blockquotes, horizontal rules, or code blocks may be preserved as sanitized HTML.
 
-## Tech stack
+## Security and privacy
 
-- Vite
-- Vanilla TypeScript
-- SCSS
-- DOMPurify
-- Turndown.js
-- vite-plugin-pwa
-- Vitest + jsdom
-- GitHub Pages
+User HTML is treated as unsafe.
 
-## Project structure
+The pipeline is:
 
-```text
-src/
-  app/
-    app.ts              App entry wiring
-  core/
-    converter.ts        HTML sanitization + Markdown conversion orchestration
-    sanitizer.ts        DOMPurify configuration
-    settings.ts         Settings schema, defaults, persistence, UI preferences
-    draft.ts            Local draft persistence
-  ui/
-    app-shell.ts        Static app shell markup and DOM control lookup
-    layout.ts           App state, event wiring, and UI updates
-    settings-panel.ts   Settings dialog rendering and form handling
-    clipboard.ts        Clipboard read/write capability helpers
-    files.ts            File import/download helpers
-    shortcuts.ts        Keyboard shortcut routing
-  styles/
-    _tokens.scss        Design tokens
-    _themes.scss        Light/dark theme variables
-    main.scss           App layout and component styles
-```
+1. Read pasted or opened input.
+2. Sanitize input with DOMPurify.
+3. Convert sanitized HTML with Turndown and h2m's internal GFM rules.
+4. Render Markdown as plain text.
 
-## Getting started
+h2m does not render user-provided HTML directly into the page.
+
+Local persistence:
+
+- settings are stored in `localStorage`;
+- draft input is stored in `localStorage`;
+- content is not sent to a server by h2m.
+
+## Built with
+
+h2m stays intentionally small and boring.
+
+| Tool | Use |
+| --- | --- |
+| [Vite](https://vite.dev/) | development server and static production build |
+| [TypeScript](https://www.typescriptlang.org/) | typed application code |
+| [SCSS](https://sass-lang.com/) | styling |
+| [DOMPurify](https://github.com/cure53/DOMPurify) | HTML sanitization |
+| [Turndown](https://github.com/mixmark-io/turndown) | HTML-to-Markdown conversion |
+| [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) | offline PWA support |
+| [Vitest](https://vitest.dev/) | tests |
+| [jsdom](https://github.com/jsdom/jsdom) | DOM test environment |
+| [Sharp](https://sharp.pixelplumbing.com/) | generated PWA image assets |
+
+Third-party license details are listed in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+
+## Development
 
 Install dependencies:
 
@@ -108,19 +113,13 @@ Install dependencies:
 pnpm install
 ```
 
-Start the dev server:
+Start the development server:
 
 ```sh
 pnpm dev
 ```
 
-Run tests:
-
-```sh
-pnpm test
-```
-
-Run type checks and tests:
+Run checks:
 
 ```sh
 pnpm check
@@ -138,36 +137,37 @@ Preview the production build:
 pnpm preview
 ```
 
-## PWA assets
-
-Production builds generate PWA image assets before Vite builds the app:
+Generate PWA assets:
 
 ```sh
 pnpm assets
 ```
 
-Generated files are written to `public/`.
+## Project structure
 
-
-## SEO and progressive enhancement
-
-The initial `index.html` contains crawlable product content, metadata, and structured data before JavaScript runs.
-The TypeScript app then replaces that static shell with the interactive converter.
-
-This keeps the app dependency-light while improving indexing, link previews, and no-JavaScript fallback content.
+```text
+src/
+  app/                 App entry wiring
+  core/                Conversion, sanitization, settings, draft persistence
+  ui/                  DOM shell, events, clipboard, files, shortcuts
+  styles/              Design tokens, themes, app styles
+```
 
 ## Deployment
 
-The public app is available at <https://cyoann.github.io/h2m/>.
+The public app is deployed at:
 
-The app is built as static files and deployed to GitHub Pages by `.github/workflows/pages.yml`.
+<https://cyoann.github.io/h2m/>
 
-The workflow uses pnpm, runs `pnpm check`, then builds with `pnpm build`. The Vite base path is derived from `GITHUB_REPOSITORY` when running in GitHub Actions, so the same build works for repository Pages deployments.
+The GitHub Pages workflow:
 
-## Development notes
+1. installs dependencies with pnpm;
+2. runs `pnpm check`;
+3. runs `pnpm build`;
+4. uploads `dist/` to GitHub Pages.
 
-- Keep the app dependency-light.
-- Do not introduce a framework or state manager.
-- Keep conversion logic deterministic and testable.
-- Keep UI code plain and explicit.
-- Preserve the offline-first behavior.
+## License
+
+h2m is released under the [MIT License](LICENSE).
+
+See [third-party notices](THIRD_PARTY_NOTICES.md) for dependency licenses.
