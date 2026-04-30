@@ -1,5 +1,7 @@
 import { convertHtmlToMarkdown } from '../core/converter';
+import { formatDraftTimestamp, loadDraft, removeDraft, saveDraft, type DraftState } from '../core/draft';
 import { applyUiPreferences, loadSettings, saveSettings, type AppSettings } from '../core/settings';
+import { createAppShell, type AppControls } from './app-shell';
 import {
   canReadPlainClipboard,
   canReadRichClipboard,
@@ -8,25 +10,15 @@ import {
   readSystemClipboardPayload,
   type ClipboardPayload,
 } from './clipboard';
-import { formatDraftTimestamp, loadDraft, removeDraft, saveDraft } from '../core/draft';
 import { deriveMarkdownFileName, downloadTextFile, isLikelyReadableTextFile, readTextFile } from './files';
 import { createSettingsPanel } from './settings-panel';
+import { handleShortcut } from './shortcuts';
 
-interface LayoutControls {
-  input: HTMLTextAreaElement;
-  output: HTMLTextAreaElement;
-  fileInput: HTMLInputElement;
-  openButton: HTMLButtonElement;
-  pasteButton: HTMLButtonElement;
-  copyButton: HTMLButtonElement;
-  downloadButton: HTMLButtonElement;
-  clearButton: HTMLButtonElement;
-  settingsButton: HTMLButtonElement;
-  statusPrimary: HTMLElement;
-  statusSecondary: HTMLElement;
-  metricHtmlCharacters: HTMLElement;
-  metricMarkdownCharacters: HTMLElement;
-  metricMarkdownWords: HTMLElement;
+interface AppState {
+  settings: AppSettings;
+  currentSourceName: string;
+  restoredDraft: DraftState | null;
+  dragDepth: number;
 }
 
 interface OutputMetrics {
@@ -36,321 +28,160 @@ interface OutputMetrics {
 }
 
 export function createLayout(): HTMLElement {
-  const shell = document.createElement('div');
+  const state = createInitialState();
 
-  let settings = loadSettings();
-  let currentSourceName = 'h2m.html';
-  let restoredDraft = loadDraft();
-  let dragDepth = 0;
-
-  if (restoredDraft) {
-    currentSourceName = restoredDraft.sourceName;
-  }
-
-  shell.className = 'app-shell';
-  applyUiPreferences(settings);
-
-  const handleSettingsChange = (nextSettings: AppSettings): void => {
-    settings = nextSettings;
-
-    saveSettings(settings);
-    applyUiPreferences(settings);
-    renderConversion('Settings saved');
-  };
+  applyUiPreferences(state.settings);
 
   const settingsPanel = createSettingsPanel({
-    settings,
+    settings: state.settings,
     onChange: handleSettingsChange,
   });
+  const { shell, controls } = createAppShell(settingsPanel);
 
-  shell.innerHTML = `
-  <header class="topbar">
-    <a class="brand" href="./" aria-label="h2m home">
-      <span class="brand__mark">h2m</span>
-      <span class="brand__text">
-        <span class="brand__name">HTML to Markdown</span>
-        <span class="brand__tagline">private · offline · clean</span>
-      </span>
-    </a>
-
-    <nav class="topbar__actions" aria-label="Application actions">
-      <button
-        class="quiet-button"
-        type="button"
-        data-action="open-settings"
-        title="Open settings"
-      >
-        Settings
-      </button>
-    </nav>
-  </header>
-
-  <section class="command-strip" aria-label="Primary workflow">
-    <div class="command-strip__intro">
-      <p class="eyebrow">Convert</p>
-      <h1>Paste a page. Keep the Markdown.</h1>
-    </div>
-
-    <div class="command-strip__actions" aria-label="Input actions">
-      <button
-        class="primary-action"
-        type="button"
-        data-action="open-file"
-        title="Open an HTML or text file"
-      >
-        Open file
-      </button>
-
-      <button
-        class="secondary-action"
-        type="button"
-        data-action="paste-html"
-        title="Paste HTML from clipboard"
-      >
-        Paste HTML
-      </button>
-
-      <button
-        class="secondary-action"
-        type="button"
-        data-action="clear-html"
-        title="Clear input"
-      >
-        Clear
-      </button>
-    </div>
-  </section>
-
-  <section class="workspace" aria-label="HTML to Markdown workspace">
-    <article class="panel panel--input">
-      <header class="panel__header">
-        <div>
-          <p class="panel__kicker">Source</p>
-          <h2>HTML</h2>
-        </div>
-
-        <p class="panel__hint">Paste rich web content or drop a file.</p>
-      </header>
-
-      <textarea
-        class="editor"
-        id="html-input"
-        name="html-input"
-        spellcheck="false"
-        placeholder="<article>
-  <h1>Your copied page</h1>
-  <p>Paste rich HTML here.</p>
-</article>"
-        aria-label="HTML input"
-      ></textarea>
-    </article>
-
-    <article class="panel panel--output">
-      <header class="panel__header">
-        <div>
-          <p class="panel__kicker">Result</p>
-          <h2>Markdown</h2>
-        </div>
-
-        <div class="panel__actions">
-          <button
-            class="text-button"
-            type="button"
-            data-action="copy-markdown"
-            disabled
-            title="Copy Markdown to clipboard"
-          >
-            Copy
-          </button>
-          <button
-            class="text-button"
-            type="button"
-            data-action="download-markdown"
-            disabled
-            title="Download Markdown file"
-          >
-            Download
-          </button>
-        </div>
-      </header>
-
-      <textarea
-        class="editor editor--output"
-        id="markdown-output"
-        name="markdown-output"
-        spellcheck="false"
-        readonly
-        placeholder="# Your copied page
-
-Paste HTML on the left. Markdown appears here."
-        aria-label="Markdown output"
-      ></textarea>
-    </article>
-  </section>
-
-  <input
-    class="file-input"
-    type="file"
-    data-file-input
-    accept=".html,.htm,.xhtml,.xml,.txt,text/html,text/plain,application/xhtml+xml,application/xml"
-    aria-label="Open HTML file"
-  />
-
-  <footer class="statusbar" aria-live="polite">
-    <div class="statusbar__messages">
-      <span data-status-primary>Ready</span>
-      <span data-status-secondary>Local only</span>
-    </div>
-
-    <dl class="metrics" aria-label="Conversion metrics">
-      <div class="metric">
-        <dt>HTML</dt>
-        <dd data-metric-html-characters>0 chars</dd>
-      </div>
-
-      <div class="metric">
-        <dt>Markdown</dt>
-        <dd data-metric-markdown-characters>0 chars</dd>
-      </div>
-
-      <div class="metric">
-        <dt>Words</dt>
-        <dd data-metric-markdown-words>0</dd>
-      </div>
-    </dl>
-  </footer>
-`;
-
-  shell.append(settingsPanel);
-
-  const controls = getLayoutControls(shell);
-
-  if (restoredDraft) {
-    controls.input.value = restoredDraft.html;
-  }
-
-  controls.pasteButton.disabled = !canReadPlainClipboard() && !canReadRichClipboard();
-  controls.clearButton.disabled = true;
-
-  controls.settingsButton.addEventListener('click', () => {
-    settingsPanel.showModal();
-  });
-
-  controls.openButton.addEventListener('click', () => {
-    controls.fileInput.click();
-  });
-
-  controls.fileInput.addEventListener('change', async () => {
-    const file = controls.fileInput.files?.item(0);
-
-    if (file) {
-      await loadFile(file);
-    }
-
-    controls.fileInput.value = '';
-  });
-
-  controls.input.addEventListener('input', () => {
-    persistCurrentDraft();
-    renderConversion();
-  });
-
-  controls.input.addEventListener('paste', (event) => {
-    const payload = readClipboardEventPayload(event);
-
-    if (!payload) {
-      return;
-    }
-
-    event.preventDefault();
-    insertAtSelection(controls.input, payload.content);
-    currentSourceName = 'clipboard.html';
-    persistCurrentDraft();
-    renderConversion(getPasteStatus(payload));
-  });
-
-  controls.pasteButton.addEventListener('click', async () => {
-    await pasteFromClipboard();
-  });
-
-  controls.copyButton.addEventListener('click', async () => {
-    await copyMarkdown();
-  });
-
-  controls.downloadButton.addEventListener('click', () => {
-    downloadMarkdown();
-  });
-
-  controls.clearButton.addEventListener('click', () => {
-    clearInput();
-  });
-
-  shell.addEventListener('dragenter', (event) => {
-    if (!hasDraggedFiles(event)) {
-      return;
-    }
-
-    event.preventDefault();
-    dragDepth += 1;
-    shell.classList.add('is-dragging');
-  });
-
-  shell.addEventListener('dragover', (event) => {
-    if (!hasDraggedFiles(event)) {
-      return;
-    }
-
-    event.preventDefault();
-
-    if (event.dataTransfer) {
-      event.dataTransfer.dropEffect = 'copy';
-    }
-  });
-
-  shell.addEventListener('dragleave', (event) => {
-    if (!hasDraggedFiles(event)) {
-      return;
-    }
-
-    dragDepth = Math.max(0, dragDepth - 1);
-
-    if (dragDepth === 0) {
-      shell.classList.remove('is-dragging');
-    }
-  });
-
-  shell.addEventListener('drop', async (event) => {
-    if (!hasDraggedFiles(event)) {
-      return;
-    }
-
-    event.preventDefault();
-    dragDepth = 0;
-    shell.classList.remove('is-dragging');
-
-    const file = event.dataTransfer?.files.item(0);
-
-    if (file) {
-      await loadFile(file);
-    }
-  });
-
-  shell.addEventListener('keydown', async (event) => {
-    await handleShortcut(event, {
-      onOpen: () => controls.fileInput.click(),
-      onPaste: pasteFromClipboard,
-      onCopy: copyMarkdown,
-      onDownload: downloadMarkdown,
-      onClear: clearInput,
-      onSettings: () => {
-        settingsPanel.showModal();
-      },
-    });
-  });
-
+  restoreDraftInput();
+  initializeControlState();
+  bindActionEvents();
+  bindDragAndDrop();
+  bindShortcuts();
   renderConversion();
 
   return shell;
+
+  function handleSettingsChange(nextSettings: AppSettings): void {
+    state.settings = nextSettings;
+
+    saveSettings(state.settings);
+    applyUiPreferences(state.settings);
+    renderConversion('Settings saved');
+  }
+
+  function restoreDraftInput(): void {
+    if (state.restoredDraft) {
+      controls.input.value = state.restoredDraft.html;
+    }
+  }
+
+  function initializeControlState(): void {
+    controls.pasteButton.disabled = !canReadPlainClipboard() && !canReadRichClipboard();
+    controls.clearButton.disabled = true;
+  }
+
+  function bindActionEvents(): void {
+    controls.settingsButton.addEventListener('click', openSettings);
+
+    controls.openButton.addEventListener('click', () => {
+      controls.fileInput.click();
+    });
+
+    controls.fileInput.addEventListener('change', async () => {
+      const file = controls.fileInput.files?.item(0);
+
+      if (file) {
+        await loadFile(file);
+      }
+
+      controls.fileInput.value = '';
+    });
+
+    controls.input.addEventListener('input', () => {
+      persistCurrentDraft();
+      renderConversion();
+    });
+
+    controls.input.addEventListener('paste', (event) => {
+      const payload = readClipboardEventPayload(event);
+
+      if (!payload) {
+        return;
+      }
+
+      event.preventDefault();
+      insertAtSelection(controls.input, payload.content);
+      state.currentSourceName = 'clipboard.html';
+      persistCurrentDraft();
+      renderConversion(getPasteStatus(payload));
+    });
+
+    controls.pasteButton.addEventListener('click', async () => {
+      await pasteFromClipboard();
+    });
+
+    controls.copyButton.addEventListener('click', async () => {
+      await copyMarkdown();
+    });
+
+    controls.downloadButton.addEventListener('click', downloadMarkdown);
+    controls.clearButton.addEventListener('click', clearInput);
+  }
+
+  function bindDragAndDrop(): void {
+    shell.addEventListener('dragenter', (event) => {
+      if (!hasDraggedFiles(event)) {
+        return;
+      }
+
+      event.preventDefault();
+      state.dragDepth += 1;
+      shell.classList.add('is-dragging');
+    });
+
+    shell.addEventListener('dragover', (event) => {
+      if (!hasDraggedFiles(event)) {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = 'copy';
+      }
+    });
+
+    shell.addEventListener('dragleave', (event) => {
+      if (!hasDraggedFiles(event)) {
+        return;
+      }
+
+      state.dragDepth = Math.max(0, state.dragDepth - 1);
+
+      if (state.dragDepth === 0) {
+        shell.classList.remove('is-dragging');
+      }
+    });
+
+    shell.addEventListener('drop', async (event) => {
+      if (!hasDraggedFiles(event)) {
+        return;
+      }
+
+      event.preventDefault();
+      state.dragDepth = 0;
+      shell.classList.remove('is-dragging');
+
+      const file = event.dataTransfer?.files.item(0);
+
+      if (file) {
+        await loadFile(file);
+      }
+    });
+  }
+
+  function bindShortcuts(): void {
+    shell.addEventListener('keydown', async (event) => {
+      await handleShortcut(event, {
+        onOpen: () => controls.fileInput.click(),
+        onPaste: pasteFromClipboard,
+        onCopy: copyMarkdown,
+        onDownload: downloadMarkdown,
+        onClear: clearInput,
+        onSettings: openSettings,
+      });
+    });
+  }
+
+  function openSettings(): void {
+    settingsPanel.showModal();
+  }
 
   async function loadFile(file: File): Promise<void> {
     if (!isLikelyReadableTextFile(file)) {
@@ -361,7 +192,7 @@ Paste HTML on the left. Markdown appears here."
     try {
       const importedFile = await readTextFile(file);
 
-      currentSourceName = importedFile.name;
+      state.currentSourceName = importedFile.name;
       controls.input.value = importedFile.content;
 
       persistCurrentDraft();
@@ -376,7 +207,7 @@ Paste HTML on the left. Markdown appears here."
     try {
       const payload = await readSystemClipboardPayload();
 
-      currentSourceName = 'clipboard.html';
+      state.currentSourceName = 'clipboard.html';
       controls.input.value = payload.content;
       persistCurrentDraft();
       renderConversion(getPasteStatus(payload));
@@ -414,14 +245,14 @@ Paste HTML on the left. Markdown appears here."
       return;
     }
 
-    const fileName = deriveMarkdownFileName(currentSourceName);
+    const fileName = deriveMarkdownFileName(state.currentSourceName);
 
     downloadTextFile(controls.output.value, fileName);
     setStatus('Downloaded Markdown', fileName);
   }
 
   function clearInput(): void {
-    currentSourceName = 'h2m.html';
+    state.currentSourceName = 'h2m.html';
     controls.input.value = '';
     removeDraft();
     renderConversion('Cleared');
@@ -431,7 +262,7 @@ Paste HTML on the left. Markdown appears here."
   function persistCurrentDraft(): void {
     const saved = saveDraft({
       html: controls.input.value,
-      sourceName: currentSourceName,
+      sourceName: state.currentSourceName,
     });
 
     if (!saved) {
@@ -440,40 +271,35 @@ Paste HTML on the left. Markdown appears here."
   }
 
   function renderConversion(statusMessage?: string): void {
-    const result = convertHtmlToMarkdown(controls.input.value, settings);
-    const metrics = getOutputMetrics(controls.input.value, result.markdown);
+    const result = convertHtmlToMarkdown(controls.input.value, state.settings);
+    const metrics = getOutputMetrics(result.inputCharacters, result.markdown);
 
     controls.output.value = result.markdown;
     controls.copyButton.disabled = result.markdown.length === 0;
     controls.downloadButton.disabled = result.markdown.length === 0;
     controls.clearButton.disabled = controls.input.value.length === 0;
 
-    renderMetrics(metrics);
+    renderMetrics(controls, metrics);
+    renderStatus(statusMessage, metrics);
+  }
 
+  function renderStatus(statusMessage: string | undefined, metrics: OutputMetrics): void {
     const primary =
       statusMessage ??
-      (restoredDraft ? `Restored ${restoredDraft.sourceName}` : getPrimaryStatus(metrics.htmlCharacters));
+      (state.restoredDraft ? `Restored ${state.restoredDraft.sourceName}` : getPrimaryStatus(metrics.htmlCharacters));
 
     const secondary =
       metrics.htmlCharacters === 0
         ? 'Local only'
-        : restoredDraft
-        ? `Saved locally ${formatDraftTimestamp(restoredDraft.updatedAt)}`
-        : `${formatNumber(metrics.htmlCharacters)} HTML chars → ${formatNumber(
-            metrics.markdownCharacters,
-          )} Markdown chars`;
+        : state.restoredDraft
+          ? `Saved locally ${formatDraftTimestamp(state.restoredDraft.updatedAt)}`
+          : `${formatNumber(metrics.htmlCharacters)} HTML chars → ${formatNumber(
+              metrics.markdownCharacters,
+            )} Markdown chars`;
 
-    restoredDraft = null;
+    state.restoredDraft = null;
 
     setStatus(primary, secondary);
-  }
-
-  function renderMetrics(metrics: OutputMetrics): void {
-    controls.metricHtmlCharacters.textContent = `${formatNumber(metrics.htmlCharacters)} chars`;
-
-    controls.metricMarkdownCharacters.textContent = `${formatNumber(metrics.markdownCharacters)} chars`;
-
-    controls.metricMarkdownWords.textContent = formatNumber(metrics.markdownWords);
   }
 
   function setStatus(primary: string, secondary: string): void {
@@ -482,91 +308,26 @@ Paste HTML on the left. Markdown appears here."
   }
 }
 
-interface ShortcutHandlers {
-  onOpen: () => void;
-  onPaste: () => Promise<void>;
-  onCopy: () => Promise<void>;
-  onDownload: () => void;
-  onClear: () => void;
-  onSettings: () => void;
-}
+function createInitialState(): AppState {
+  const restoredDraft = loadDraft();
 
-async function handleShortcut(event: KeyboardEvent, handlers: ShortcutHandlers): Promise<void> {
-  const key = event.key.toLowerCase();
-  const hasPrimaryModifier = event.metaKey || event.ctrlKey;
-
-  if (!hasPrimaryModifier) {
-    return;
-  }
-
-  if (!event.shiftKey && key === 'o') {
-    event.preventDefault();
-    handlers.onOpen();
-    return;
-  }
-
-  if (event.shiftKey && key === 'v') {
-    event.preventDefault();
-    await handlers.onPaste();
-    return;
-  }
-
-  if (event.shiftKey && key === 'c') {
-    event.preventDefault();
-    await handlers.onCopy();
-    return;
-  }
-
-  if (event.shiftKey && key === 's') {
-    event.preventDefault();
-    handlers.onDownload();
-    return;
-  }
-
-  if (event.shiftKey && key === 'x') {
-    event.preventDefault();
-    handlers.onClear();
-    return;
-  }
-
-  if (key === ',') {
-    event.preventDefault();
-    handlers.onSettings();
-  }
-}
-
-function getLayoutControls(root: HTMLElement): LayoutControls {
   return {
-    input: getRequiredElement(root, '#html-input', HTMLTextAreaElement),
-    output: getRequiredElement(root, '#markdown-output', HTMLTextAreaElement),
-    fileInput: getRequiredElement(root, '[data-file-input]', HTMLInputElement),
-    openButton: getRequiredElement(root, '[data-action="open-file"]', HTMLButtonElement),
-    pasteButton: getRequiredElement(root, '[data-action="paste-html"]', HTMLButtonElement),
-    copyButton: getRequiredElement(root, '[data-action="copy-markdown"]', HTMLButtonElement),
-    downloadButton: getRequiredElement(root, '[data-action="download-markdown"]', HTMLButtonElement),
-    clearButton: getRequiredElement(root, '[data-action="clear-html"]', HTMLButtonElement),
-    settingsButton: getRequiredElement(root, '[data-action="open-settings"]', HTMLButtonElement),
-    statusPrimary: getRequiredElement(root, '[data-status-primary]', HTMLElement),
-    statusSecondary: getRequiredElement(root, '[data-status-secondary]', HTMLElement),
-    metricHtmlCharacters: getRequiredElement(root, '[data-metric-html-characters]', HTMLElement),
-    metricMarkdownCharacters: getRequiredElement(root, '[data-metric-markdown-characters]', HTMLElement),
-    metricMarkdownWords: getRequiredElement(root, '[data-metric-markdown-words]', HTMLElement),
+    settings: loadSettings(),
+    currentSourceName: restoredDraft?.sourceName ?? 'h2m.html',
+    restoredDraft,
+    dragDepth: 0,
   };
 }
 
-function getRequiredElement<T extends HTMLElement>(root: HTMLElement, selector: string, constructor: new () => T): T {
-  const element = root.querySelector(selector);
-
-  if (!(element instanceof constructor)) {
-    throw new Error(`h2m layout failed to find required element: ${selector}`);
-  }
-
-  return element;
+function renderMetrics(controls: AppControls, metrics: OutputMetrics): void {
+  controls.metricHtmlCharacters.textContent = `${formatNumber(metrics.htmlCharacters)} chars`;
+  controls.metricMarkdownCharacters.textContent = `${formatNumber(metrics.markdownCharacters)} chars`;
+  controls.metricMarkdownWords.textContent = formatNumber(metrics.markdownWords);
 }
 
-function getOutputMetrics(html: string, markdown: string): OutputMetrics {
+function getOutputMetrics(inputCharacters: number, markdown: string): OutputMetrics {
   return {
-    htmlCharacters: html.length,
+    htmlCharacters: inputCharacters,
     markdownCharacters: markdown.length,
     markdownWords: countWords(markdown),
   };
