@@ -39,7 +39,7 @@ const appShellMarkup = `
       <span class="brand__mark">h2m</span>
       <span class="brand__text">
         <span class="brand__name">HTML → MARKDOWN</span>
-        <span class="brand__tagline">LOCAL / OFFLINE / BRUTALIST</span>
+        <span class="brand__tagline">PRIVATE / OFFLINE / SANITIZED</span>
       </span>
     </a>
 
@@ -59,8 +59,8 @@ const appShellMarkup = `
   <section class="command-strip" aria-label="Primary workflow">
     <div class="command-strip__intro">
       <p class="eyebrow">WORKFLOW</p>
-      <h1>PASTE HTML. GET MARKDOWN.</h1>
-      <p class="command-strip__note">No server. No sync. No rich preview. Just clean conversion.</p>
+      <h1>CONVERT HTML TO MARKDOWN.</h1>
+      <p class="command-strip__note">Paste page HTML or open a local file. h2m sanitizes it in your browser and returns Markdown.</p>
     </div>
 
     <div class="command-strip__actions" aria-label="Input actions">
@@ -104,7 +104,7 @@ const appShellMarkup = `
           <h2>source.html</h2>
         </div>
 
-        <p class="panel__hint">Paste raw page markup or drop a local file.</p>
+        <p class="panel__hint">Unsafe input stays local and is sanitized before conversion.</p>
       </header>
 
       <textarea
@@ -114,7 +114,7 @@ const appShellMarkup = `
         spellcheck="false"
         placeholder="<article>
   <h1>Copied page</h1>
-  <p>Paste rich HTML here.</p>
+  <p>Paste copied HTML here.</p>
 </article>"
         aria-label="HTML input"
       ></textarea>
@@ -157,9 +157,9 @@ const appShellMarkup = `
         name="markdown-output"
         spellcheck="false"
         readonly
-        placeholder="# Copied page
+        placeholder="# Clean Markdown
 
-Paste HTML on the left. Markdown appears here."
+Paste HTML on the left. Sanitized Markdown appears here."
         aria-label="Markdown output"
       ></textarea>
     </article>
