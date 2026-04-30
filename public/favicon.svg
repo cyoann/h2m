@@ -1,11 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="h2m">
-  <rect width="64" height="64" rx="14" fill="#151515"/>
-  <text
-    x="32"
-    y="39"
-    text-anchor="middle"
-    font-family="Georgia, 'Times New Roman', serif"
-    font-size="19"
-    fill="#f7f4ee"
-  >h2m</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="h2m favicon">
+  <rect width="64" height="64" fill="#e0b84f"/>
+  <rect x="3" y="3" width="58" height="58" fill="none" stroke="#111111" stroke-width="4"/>
+  <path
+    d="M18 18L30 32L18 46"
+    fill="none"
+    stroke="#111111"
+    stroke-width="7"
+    stroke-linecap="square"
+    stroke-linejoin="miter"
+  />
+  <path
+    d="M37 21H47M37 32H47M37 43H47"
+    fill="none"
+    stroke="#111111"
+    stroke-width="6"
+    stroke-linecap="square"
+  />
 </svg>
