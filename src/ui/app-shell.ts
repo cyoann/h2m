@@ -39,7 +39,7 @@ const appShellMarkup = `
       <span class="brand__mark">h2m</span>
       <span class="brand__text">
         <span class="brand__name">HTML → MARKDOWN</span>
-        <span class="brand__tagline">PRIVATE / OFFLINE / SANITIZED</span>
+        <span class="brand__tagline">Turn copied web pages into Markdown.</span>
       </span>
     </a>
 
@@ -60,7 +60,7 @@ const appShellMarkup = `
     <div class="command-strip__intro">
       <p class="eyebrow">WORKFLOW</p>
       <h1>CONVERT HTML TO MARKDOWN.</h1>
-      <p class="command-strip__note">Paste page HTML or open a local file. h2m sanitizes it in your browser and returns Markdown.</p>
+      <p class="command-strip__note">Paste HTML or open a local file. h2m cleans it in your browser and returns Markdown.</p>
     </div>
 
     <div class="command-strip__actions" aria-label="Input actions">
