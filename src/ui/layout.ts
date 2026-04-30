@@ -11,6 +11,7 @@ import {
   type ClipboardPayload,
 } from './clipboard';
 import { deriveMarkdownFileName, downloadTextFile, isLikelyReadableTextFile, readTextFile } from './files';
+import { createLegalPanel } from './legal-panel';
 import { createSettingsPanel } from './settings-panel';
 import { handleShortcut } from './shortcuts';
 
@@ -36,7 +37,10 @@ export function createLayout(): HTMLElement {
     settings: state.settings,
     onChange: handleSettingsChange,
   });
+  const legalPanel = createLegalPanel();
   const { shell, controls } = createAppShell(settingsPanel);
+
+  shell.append(legalPanel);
 
   restoreDraftInput();
   initializeControlState();
@@ -68,6 +72,7 @@ export function createLayout(): HTMLElement {
 
   function bindActionEvents(): void {
     controls.settingsButton.addEventListener('click', openSettings);
+    controls.legalButton.addEventListener('click', openLegal);
 
     controls.openButton.addEventListener('click', () => {
       controls.fileInput.click();
@@ -182,6 +187,12 @@ export function createLayout(): HTMLElement {
   function openSettings(): void {
     if (!settingsPanel.open) {
       settingsPanel.showModal();
+    }
+  }
+
+  function openLegal(): void {
+    if (!legalPanel.open) {
+      legalPanel.showModal();
     }
   }
 

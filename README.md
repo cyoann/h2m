@@ -89,7 +89,7 @@ Local persistence:
 
 ## Built with
 
-h2m stays intentionally small and boring.
+h2m uses a small, focused browser stack.
 
 | Tool | Use |
 | --- | --- |
@@ -103,7 +103,7 @@ h2m stays intentionally small and boring.
 | [jsdom](https://github.com/jsdom/jsdom) | DOM test environment |
 | [Sharp](https://sharp.pixelplumbing.com/) | generated PWA image assets |
 
-Third-party license details are listed in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+Third-party license details are listed in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) and are available from the app footer.
 
 ## Development
 
@@ -170,4 +170,4 @@ The GitHub Pages workflow:
 
 h2m is released under the [MIT License](LICENSE).
 
-See [third-party notices](THIRD_PARTY_NOTICES.md) for dependency licenses.
+Copyright and third-party notices are available in the app footer and in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

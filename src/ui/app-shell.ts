@@ -8,6 +8,7 @@ export interface AppControls {
   downloadButton: HTMLButtonElement;
   clearButton: HTMLButtonElement;
   settingsButton: HTMLButtonElement;
+  legalButton: HTMLButtonElement;
   statusPrimary: HTMLElement;
   statusSecondary: HTMLElement;
   metricHtmlCharacters: HTMLElement;
@@ -25,6 +26,7 @@ export function createAppShell(settingsPanel: HTMLDialogElement): AppShell {
 
   shell.className = 'app-shell';
   shell.innerHTML = appShellMarkup;
+  renderCurrentYear(shell);
   shell.append(settingsPanel);
 
   return {
@@ -179,6 +181,26 @@ Paste HTML on the left. Sanitized Markdown appears here."
       <span class="statusbar__secondary" data-status-secondary>LOCAL ONLY</span>
     </div>
 
+    <div class="statusbar__legal" aria-label="Copyright and legal notices">
+      <span class="legal-copy">Copyright © <span data-current-year></span></span>
+      <a
+        class="legal-author"
+        href="https://github.com/cyoann"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        cyoann
+      </a>
+      <button
+        class="legal-link"
+        type="button"
+        data-action="open-legal"
+        title="Open copyright and third-party notices"
+      >
+        Legal notices
+      </button>
+    </div>
+
     <dl class="metrics" aria-label="Conversion metrics">
       <div class="metric">
         <dt>HTML</dt>
@@ -198,6 +220,14 @@ Paste HTML on the left. Sanitized Markdown appears here."
   </footer>
 `;
 
+function renderCurrentYear(root: HTMLElement): void {
+  const year = root.querySelector<HTMLElement>('[data-current-year]');
+
+  if (year) {
+    year.textContent = String(new Date().getFullYear());
+  }
+}
+
 function getAppControls(root: HTMLElement): AppControls {
   return {
     input: getRequiredElement(root, '#html-input', HTMLTextAreaElement),
@@ -209,6 +239,7 @@ function getAppControls(root: HTMLElement): AppControls {
     downloadButton: getRequiredElement(root, '[data-action="download-markdown"]', HTMLButtonElement),
     clearButton: getRequiredElement(root, '[data-action="clear-html"]', HTMLButtonElement),
     settingsButton: getRequiredElement(root, '[data-action="open-settings"]', HTMLButtonElement),
+    legalButton: getRequiredElement(root, '[data-action="open-legal"]', HTMLButtonElement),
     statusPrimary: getRequiredElement(root, '[data-status-primary]', HTMLElement),
     statusSecondary: getRequiredElement(root, '[data-status-secondary]', HTMLElement),
     metricHtmlCharacters: getRequiredElement(root, '[data-metric-html-characters]', HTMLElement),
