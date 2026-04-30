@@ -131,6 +131,8 @@ This keeps the app dependency-light while improving indexing, link previews, and
 
 ## Deployment
 
+The public app is available at <https://cyoann.github.io/h2m/>.
+
 The app is built as static files and deployed to GitHub Pages by `.github/workflows/pages.yml`.
 
 The workflow uses pnpm, runs `pnpm check`, then builds with `pnpm build`. The Vite base path is derived from `GITHUB_REPOSITORY` when running in GitHub Actions, so the same build works for repository Pages deployments.
