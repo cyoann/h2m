@@ -1,7 +1,7 @@
 :root {
-  --font-ui: "Avenir Next", "Segoe UI", sans-serif;
-  --font-editor: "Iosevka", "Cascadia Code", "SF Mono", monospace;
-  --font-serif: "Iowan Old Style", "Palatino", serif;
+  --font-ui: "Iosevka", "Cascadia Code", "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --font-editor: "Iosevka", "Cascadia Code", "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --font-serif: var(--font-ui);
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -10,27 +10,26 @@
   --space-5: 1.5rem;
   --space-6: 2rem;
 
-  --radius-sm: 0.45rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1.05rem;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
 
-  --line-thin: 1px solid var(--color-line);
+  --line-thin: 2px solid var(--color-line);
+  --line-strong: 3px solid var(--color-line-strong);
 
-  --shadow-soft: 0 24px 80px rgb(0 0 0 / 0.1);
-  --shadow-dialog: 0 32px 120px rgb(0 0 0 / 0.28);
+  --shadow-soft: none;
+  --shadow-dialog: none;
 
-  --page-inset: clamp(0.75rem, 1.8vw, 1.5rem);
+  --page-inset: clamp(0.75rem, 1.4vw, 1.25rem);
   --topbar-height: 4rem;
-  --command-height: 4.75rem;
-  --status-height: 3.25rem;
-  --panel-padding: clamp(0.875rem, 1.3vw, 1.25rem);
-  --editor-font-size: clamp(0.88rem, 0.85vw, 0.98rem);
+  --command-height: auto;
+  --status-height: auto;
+  --panel-padding: 1rem;
+  --editor-font-size: clamp(0.9rem, 0.85vw, 1rem);
 }
 
 :root[data-density="compact"] {
   --page-inset: 0.75rem;
-  --command-height: 4rem;
-  --status-height: 2.75rem;
   --panel-padding: 0.875rem;
   --editor-font-size: 0.88rem;
 }

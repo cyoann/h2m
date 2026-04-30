@@ -1,6 +1,6 @@
 # h2m
 
-h2m is a lightweight, offline-first HTML-to-Markdown converter.
+h2m is a lightweight, offline-first HTML-to-Markdown converter with a brutalist, terminal-inspired interface.
 
 It runs entirely in the browser. Paste rich web-page HTML, open or drop a local HTML/text file, and export clean Markdown without sending content to a server.
 

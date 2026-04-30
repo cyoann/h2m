@@ -305,7 +305,7 @@ export function createLayout(): HTMLElement {
   }
 
   function setStatus(primary: string, secondary: string): void {
-    controls.statusPrimary.textContent = primary;
+    controls.statusPrimary.textContent = primary.startsWith('> ') ? primary : `> ${primary}`;
     controls.statusSecondary.textContent = secondary;
   }
 }

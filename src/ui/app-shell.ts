@@ -38,8 +38,8 @@ const appShellMarkup = `
     <a class="brand" href="./" aria-label="h2m home">
       <span class="brand__mark">h2m</span>
       <span class="brand__text">
-        <span class="brand__name">HTML to Markdown</span>
-        <span class="brand__tagline">private · offline · clean</span>
+        <span class="brand__name">HTML → MARKDOWN</span>
+        <span class="brand__tagline">LOCAL / OFFLINE / BRUTALIST</span>
       </span>
     </a>
 
@@ -51,15 +51,16 @@ const appShellMarkup = `
         title="Open settings (Ctrl/Cmd+,)"
         aria-keyshortcuts="Control+, Meta+,"
       >
-        Settings
+        [CONFIG]
       </button>
     </nav>
   </header>
 
   <section class="command-strip" aria-label="Primary workflow">
     <div class="command-strip__intro">
-      <p class="eyebrow">Convert</p>
-      <h1>Paste a page. Keep the Markdown.</h1>
+      <p class="eyebrow">WORKFLOW</p>
+      <h1>PASTE HTML. GET MARKDOWN.</h1>
+      <p class="command-strip__note">No server. No sync. No rich preview. Just clean conversion.</p>
     </div>
 
     <div class="command-strip__actions" aria-label="Input actions">
@@ -70,7 +71,7 @@ const appShellMarkup = `
         title="Open an HTML or text file (Ctrl/Cmd+O)"
         aria-keyshortcuts="Control+O Meta+O"
       >
-        Open file
+        [OPEN FILE]
       </button>
 
       <button
@@ -80,7 +81,7 @@ const appShellMarkup = `
         title="Paste HTML from clipboard (Ctrl/Cmd+Shift+V)"
         aria-keyshortcuts="Control+Shift+V Meta+Shift+V"
       >
-        Paste HTML
+        [PASTE HTML]
       </button>
 
       <button
@@ -90,7 +91,7 @@ const appShellMarkup = `
         title="Clear input (Ctrl/Cmd+Shift+X)"
         aria-keyshortcuts="Control+Shift+X Meta+Shift+X"
       >
-        Clear
+        [CLEAR]
       </button>
     </div>
   </section>
@@ -99,11 +100,11 @@ const appShellMarkup = `
     <article class="panel panel--input">
       <header class="panel__header">
         <div>
-          <p class="panel__kicker">Source</p>
-          <h2>HTML</h2>
+          <p class="panel__kicker">INPUT</p>
+          <h2>source.html</h2>
         </div>
 
-        <p class="panel__hint">Paste rich web content or drop a file.</p>
+        <p class="panel__hint">Paste raw page markup or drop a local file.</p>
       </header>
 
       <textarea
@@ -112,7 +113,7 @@ const appShellMarkup = `
         name="html-input"
         spellcheck="false"
         placeholder="<article>
-  <h1>Your copied page</h1>
+  <h1>Copied page</h1>
   <p>Paste rich HTML here.</p>
 </article>"
         aria-label="HTML input"
@@ -122,8 +123,8 @@ const appShellMarkup = `
     <article class="panel panel--output">
       <header class="panel__header">
         <div>
-          <p class="panel__kicker">Result</p>
-          <h2>Markdown</h2>
+          <p class="panel__kicker">OUTPUT</p>
+          <h2>result.md</h2>
         </div>
 
         <div class="panel__actions">
@@ -135,7 +136,7 @@ const appShellMarkup = `
             title="Copy Markdown to clipboard (Ctrl/Cmd+Shift+C)"
             aria-keyshortcuts="Control+Shift+C Meta+Shift+C"
           >
-            Copy
+            [COPY]
           </button>
           <button
             class="text-button"
@@ -145,7 +146,7 @@ const appShellMarkup = `
             title="Download Markdown file (Ctrl/Cmd+Shift+S)"
             aria-keyshortcuts="Control+Shift+S Meta+Shift+S"
           >
-            Download
+            [SAVE]
           </button>
         </div>
       </header>
@@ -156,7 +157,7 @@ const appShellMarkup = `
         name="markdown-output"
         spellcheck="false"
         readonly
-        placeholder="# Your copied page
+        placeholder="# Copied page
 
 Paste HTML on the left. Markdown appears here."
         aria-label="Markdown output"
@@ -174,8 +175,8 @@ Paste HTML on the left. Markdown appears here."
 
   <footer class="statusbar" aria-live="polite">
     <div class="statusbar__messages">
-      <span class="statusbar__primary" data-status-primary>Ready</span>
-      <span class="statusbar__secondary" data-status-secondary>Local only</span>
+      <span class="statusbar__primary" data-status-primary>&gt; READY</span>
+      <span class="statusbar__secondary" data-status-secondary>LOCAL ONLY</span>
     </div>
 
     <dl class="metrics" aria-label="Conversion metrics">
@@ -185,12 +186,12 @@ Paste HTML on the left. Markdown appears here."
       </div>
 
       <div class="metric">
-        <dt>Markdown</dt>
+        <dt>MARKDOWN</dt>
         <dd data-metric-markdown-characters>0 chars</dd>
       </div>
 
       <div class="metric">
-        <dt>Words</dt>
+        <dt>WORDS</dt>
         <dd data-metric-markdown-words>0</dd>
       </div>
     </dl>
