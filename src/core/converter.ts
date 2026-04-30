@@ -1,5 +1,6 @@
 import TurndownService from 'turndown';
 import type { AppSettings } from './settings';
+import { applyGfmRules, prepareGfmHtmlForConversion } from './gfm';
 import { sanitizeHtml } from './sanitizer';
 
 export interface ConversionResult {
@@ -24,7 +25,8 @@ export function convertHtmlToMarkdown(dirtyHtml: string, settings: AppSettings):
   }
 
   const service = createTurndownService(settings);
-  const markdown = normalizeMarkdown(service.turndown(sanitizedHtml));
+  const htmlForConversion = prepareGfmHtmlForConversion(sanitizedHtml, settings);
+  const markdown = normalizeMarkdown(service.turndown(htmlForConversion));
 
   return {
     markdown,
@@ -50,7 +52,7 @@ function createTurndownService(settings: AppSettings): TurndownService {
   applyLinkRules(service, settings);
   applyImageRules(service, settings);
   applyStrikethroughRules(service, settings);
-  applyTableRules(service, settings);
+  applyGfmRules(service, settings);
 
   return service;
 }
@@ -106,14 +108,6 @@ function applyStrikethroughRules(service: TurndownService, settings: AppSettings
       return settings.enableStrikethrough ? `~~${content}~~` : content;
     },
   });
-}
-
-function applyTableRules(service: TurndownService, settings: AppSettings): void {
-  if (!settings.preserveTables) {
-    return;
-  }
-
-  service.keep(['table']);
 }
 
 function normalizeMarkdown(markdown: string): string {

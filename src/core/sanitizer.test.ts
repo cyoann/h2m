@@ -39,6 +39,17 @@ describe('sanitizeHtml', () => {
     expect(cleanHtml).toContain('<p>Hello</p>');
   });
 
+
+  it('keeps checkbox state for task list conversion while removing events', () => {
+    const cleanHtml = sanitizeHtml('<input type="checkbox" checked onclick="alert(1)">', {
+      removeComments: true,
+    });
+
+    expect(cleanHtml).toContain('type="checkbox"');
+    expect(cleanHtml).toContain('checked');
+    expect(cleanHtml).not.toContain('onclick');
+  });
+
   it('forbids inline style attributes', () => {
     const cleanHtml = sanitizeHtml('<p style="color: red">Hello</p>', {
       removeComments: true,

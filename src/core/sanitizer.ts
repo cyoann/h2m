@@ -12,6 +12,7 @@ export function sanitizeHtml(dirtyHtml: string, options: SanitizerOptions): stri
   return DOMPurify.sanitize(preparedHtml, {
     USE_PROFILES: { html: true },
     FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'template'],
+    ADD_ATTR: ['checked', 'role', 'aria-checked'],
     FORBID_ATTR: ['style'],
     SANITIZE_DOM: true,
   });

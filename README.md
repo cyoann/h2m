@@ -10,14 +10,17 @@ It runs entirely in the browser. Paste rich web-page HTML, open or drop a local 
 - Opens or drag-drops local `.html`, `.htm`, `.xhtml`, `.xml`, and `.txt` files.
 - Sanitizes user HTML with DOMPurify before conversion.
 - Converts sanitized HTML with Turndown.js.
+- Defaults to GitHub Flavored Markdown-friendly output.
 - Preserves configurable conversion settings:
   - heading style
   - code block style
+  - detected code block languages
   - bullet marker
   - link handling
   - image handling
   - strikethrough
-  - table preservation
+  - task list items
+  - table output mode
   - comment removal
 - Persists user settings locally.
 - Persists the current draft locally.
@@ -37,6 +40,30 @@ The conversion pipeline is:
 4. Render Markdown output as plain text.
 
 The app does not render user-provided HTML directly into the page.
+
+## Markdown output
+
+The default output targets GitHub Flavored Markdown-compatible documents:
+
+- ATX headings such as `# Heading`.
+- Fenced code blocks with detected language names when available.
+- Markdown links and images by default.
+- Strikethrough syntax with `~~text~~`.
+- Task list items from checkbox list markup: `- [ ]` and `- [x]`.
+- Simple HTML tables as Markdown tables.
+- Table captions before Markdown tables.
+- Table cell alignment, escaped pipes, cell line breaks, and basic `colspan` padding.
+
+Tables are configurable because HTML tables vary widely:
+
+- **Markdown table**: best for simple data tables. Complex tables that would lose structure are preserved as sanitized HTML.
+- **Sanitized HTML**: best for nested or layout-heavy tables.
+- **Plain text**: best when users only want readable cell text.
+
+Known Markdown table limits:
+
+- `rowspan` has no faithful GitHub Flavored Markdown equivalent.
+- Tables with block content such as lists, headings, blockquotes, horizontal rules, code blocks, or nested tables may be kept as sanitized HTML in Markdown table mode.
 
 ## Tech stack
 

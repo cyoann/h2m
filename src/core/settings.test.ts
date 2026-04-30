@@ -49,11 +49,13 @@ describe('settings', () => {
 
         linkMode: 'external',
         imageMode: 'base64',
+        tableMode: 'csv',
         enableStrikethrough: 'sometimes',
-        preserveTables: 'maybe',
+        enableTaskListItems: 'sometimes',
+        enableHighlightedCodeBlocks: 'sometimes',
 
         theme: 'solarized',
-        zenDensity: 'no',
+        density: 'dense',
       }),
     );
 
@@ -71,16 +73,49 @@ describe('settings', () => {
 
       linkMode: 'text',
       imageMode: 'alt',
+      tableMode: 'html',
       enableStrikethrough: false,
-      preserveTables: false,
+      enableTaskListItems: false,
+      enableHighlightedCodeBlocks: false,
 
       theme: 'dark',
-      zenDensity: false,
+      density: 'compact',
     };
 
     saveSettings(settings, storage);
 
     expect(loadSettings(storage)).toEqual(settings);
+  });
+
+
+  it('migrates legacy density settings', () => {
+    const storage = new MemoryStorage();
+
+    storage.setItem(
+      'h2m:settings:v1',
+      JSON.stringify({
+        ...DEFAULT_SETTINGS,
+        zenDensity: false,
+        density: undefined,
+      }),
+    );
+
+    expect(loadSettings(storage).density).toBe('compact');
+  });
+
+  it('migrates legacy table preservation settings', () => {
+    const storage = new MemoryStorage();
+
+    storage.setItem(
+      'h2m:settings:v1',
+      JSON.stringify({
+        ...DEFAULT_SETTINGS,
+        preserveTables: true,
+        tableMode: undefined,
+      }),
+    );
+
+    expect(loadSettings(storage).tableMode).toBe('html');
   });
 
   it('applies UI preferences to the document root', () => {
@@ -90,7 +125,7 @@ describe('settings', () => {
       {
         ...DEFAULT_SETTINGS,
         theme: 'dark',
-        zenDensity: false,
+        density: 'compact',
       },
       root,
     );

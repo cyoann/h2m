@@ -2,9 +2,11 @@ export type HeadingStyle = 'setext' | 'atx';
 export type CodeBlockStyle = 'indented' | 'fenced';
 export type BulletListMarker = '-' | '+' | '*';
 export type ThemePreference = 'system' | 'light' | 'dark';
+export type DensityPreference = 'comfortable' | 'compact';
 
 export type LinkMode = 'preserve' | 'text';
 export type ImageMode = 'markdown' | 'alt' | 'remove';
+export type TableMode = 'markdown' | 'html' | 'text';
 
 export interface AppSettings {
   headingStyle: HeadingStyle;
@@ -14,11 +16,13 @@ export interface AppSettings {
 
   linkMode: LinkMode;
   imageMode: ImageMode;
+  tableMode: TableMode;
   enableStrikethrough: boolean;
-  preserveTables: boolean;
+  enableTaskListItems: boolean;
+  enableHighlightedCodeBlocks: boolean;
 
   theme: ThemePreference;
-  zenDensity: boolean;
+  density: DensityPreference;
 }
 
 const STORAGE_KEY = 'h2m:settings:v1';
@@ -27,8 +31,10 @@ const headingStyles = ['setext', 'atx'] as const;
 const codeBlockStyles = ['indented', 'fenced'] as const;
 const bulletListMarkers = ['-', '+', '*'] as const;
 const themePreferences = ['system', 'light', 'dark'] as const;
+const densityPreferences = ['comfortable', 'compact'] as const;
 const linkModes = ['preserve', 'text'] as const;
 const imageModes = ['markdown', 'alt', 'remove'] as const;
+const tableModes = ['markdown', 'html', 'text'] as const;
 
 export const DEFAULT_SETTINGS: AppSettings = {
   headingStyle: 'atx',
@@ -38,11 +44,13 @@ export const DEFAULT_SETTINGS: AppSettings = {
 
   linkMode: 'preserve',
   imageMode: 'markdown',
+  tableMode: 'markdown',
   enableStrikethrough: true,
-  preserveTables: true,
+  enableTaskListItems: true,
+  enableHighlightedCodeBlocks: true,
 
   theme: 'system',
-  zenDensity: true,
+  density: 'comfortable',
 };
 
 export function loadSettings(storage: Storage = globalThis.localStorage): AppSettings {
@@ -65,7 +73,7 @@ export function saveSettings(settings: AppSettings, storage: Storage = globalThi
 
 export function applyUiPreferences(settings: AppSettings, root: HTMLElement = document.documentElement): void {
   root.dataset.theme = settings.theme;
-  root.dataset.density = settings.zenDensity ? 'zen' : 'compact';
+  root.dataset.density = settings.density;
 
   root.style.colorScheme = settings.theme === 'system' ? 'light dark' : settings.theme;
 }
@@ -83,12 +91,41 @@ function parseSettings(value: unknown): AppSettings {
 
     linkMode: readChoice(value.linkMode, linkModes, DEFAULT_SETTINGS.linkMode),
     imageMode: readChoice(value.imageMode, imageModes, DEFAULT_SETTINGS.imageMode),
+    tableMode: readChoice(value.tableMode, tableModes, readLegacyTableMode(value.preserveTables)),
     enableStrikethrough: readBoolean(value.enableStrikethrough, DEFAULT_SETTINGS.enableStrikethrough),
-    preserveTables: readBoolean(value.preserveTables, DEFAULT_SETTINGS.preserveTables),
+    enableTaskListItems: readBoolean(value.enableTaskListItems, DEFAULT_SETTINGS.enableTaskListItems),
+    enableHighlightedCodeBlocks: readBoolean(
+      value.enableHighlightedCodeBlocks,
+      DEFAULT_SETTINGS.enableHighlightedCodeBlocks,
+    ),
 
     theme: readChoice(value.theme, themePreferences, DEFAULT_SETTINGS.theme),
-    zenDensity: readBoolean(value.zenDensity, DEFAULT_SETTINGS.zenDensity),
+    density: readChoice(value.density, densityPreferences, readLegacyDensity(value.zenDensity)),
   };
+}
+
+function readLegacyDensity(value: unknown): DensityPreference {
+  if (value === false) {
+    return 'compact';
+  }
+
+  if (value === true) {
+    return 'comfortable';
+  }
+
+  return DEFAULT_SETTINGS.density;
+}
+
+function readLegacyTableMode(value: unknown): TableMode {
+  if (value === true) {
+    return 'html';
+  }
+
+  if (value === false) {
+    return 'markdown';
+  }
+
+  return DEFAULT_SETTINGS.tableMode;
 }
 
 function readChoice<T extends string>(value: unknown, allowedValues: readonly T[], fallback: T): T {

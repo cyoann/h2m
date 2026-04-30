@@ -3,9 +3,11 @@ import {
   type AppSettings,
   type BulletListMarker,
   type CodeBlockStyle,
+  type DensityPreference,
   type HeadingStyle,
   type ImageMode,
   type LinkMode,
+  type TableMode,
   type ThemePreference,
 } from '../core/settings';
 
@@ -18,8 +20,10 @@ const headingStyles = ['atx', 'setext'] as const satisfies readonly HeadingStyle
 const codeBlockStyles = ['fenced', 'indented'] as const satisfies readonly CodeBlockStyle[];
 const bulletListMarkers = ['-', '*', '+'] as const satisfies readonly BulletListMarker[];
 const themePreferences = ['system', 'light', 'dark'] as const satisfies readonly ThemePreference[];
+const densityPreferences = ['comfortable', 'compact'] as const satisfies readonly DensityPreference[];
 const linkModes = ['preserve', 'text'] as const satisfies readonly LinkMode[];
 const imageModes = ['markdown', 'alt', 'remove'] as const satisfies readonly ImageMode[];
+const tableModes = ['markdown', 'html', 'text'] as const satisfies readonly TableMode[];
 
 export function createSettingsPanel({ settings, onChange }: SettingsPanelOptions): HTMLDialogElement {
   const dialog = document.createElement('dialog');
@@ -114,11 +118,35 @@ export function createSettingsPanel({ settings, onChange }: SettingsPanelOptions
           </label>
 
           <label class="check-row">
-            <input type="checkbox" name="preserveTables" ${checked(settings.preserveTables)} />
+            <input type="checkbox" name="enableTaskListItems" ${checked(settings.enableTaskListItems)} />
             <span>
-              <strong>Preserve tables as HTML</strong>
-              <small>Keep sanitized tables instead of flattening their text.</small>
+              <strong>Task lists</strong>
+              <small>Convert checkbox list items into GitHub-style [ ] and [x] tasks.</small>
             </span>
+          </label>
+
+          <label class="check-row">
+            <input
+              type="checkbox"
+              name="enableHighlightedCodeBlocks"
+              ${checked(settings.enableHighlightedCodeBlocks)}
+            />
+            <span>
+              <strong>Code block languages</strong>
+              <small>Preserve detected language names on fenced code blocks.</small>
+            </span>
+          </label>
+
+          <label class="field-row">
+            <span>
+              <strong>Tables</strong>
+              <small>Convert simple tables to Markdown, preserve complex tables as HTML, or flatten them.</small>
+            </span>
+            <select name="tableMode">
+              <option value="markdown" ${selected(settings.tableMode, 'markdown')}>Markdown table</option>
+              <option value="html" ${selected(settings.tableMode, 'html')}>Sanitized HTML</option>
+              <option value="text" ${selected(settings.tableMode, 'text')}>Plain text</option>
+            </select>
           </label>
 
           <label class="check-row">
@@ -136,7 +164,7 @@ export function createSettingsPanel({ settings, onChange }: SettingsPanelOptions
           <label class="field-row">
             <span>
               <strong>Theme</strong>
-              <small>System mode is the default Zen behavior.</small>
+              <small>Follow your system theme, or force light or dark mode.</small>
             </span>
             <select name="theme">
               <option value="system" ${selected(settings.theme, 'system')}>System</option>
@@ -145,12 +173,15 @@ export function createSettingsPanel({ settings, onChange }: SettingsPanelOptions
             </select>
           </label>
 
-          <label class="check-row">
-            <input type="checkbox" name="zenDensity" ${checked(settings.zenDensity)} />
+          <label class="field-row">
             <span>
-              <strong>Zen spacing</strong>
-              <small>Use generous whitespace and taller writing surfaces.</small>
+              <strong>Layout density</strong>
+              <small>Choose comfortable spacing or a more compact workspace.</small>
             </span>
+            <select name="density">
+              <option value="comfortable" ${selected(settings.density, 'comfortable')}>Comfortable</option>
+              <option value="compact" ${selected(settings.density, 'compact')}>Compact</option>
+            </select>
           </label>
         </fieldset>
       </div>
@@ -200,11 +231,13 @@ function readSettingsFromForm(form: HTMLFormElement): AppSettings {
 
     linkMode: readChoice(data.get('linkMode'), linkModes, DEFAULT_SETTINGS.linkMode),
     imageMode: readChoice(data.get('imageMode'), imageModes, DEFAULT_SETTINGS.imageMode),
+    tableMode: readChoice(data.get('tableMode'), tableModes, DEFAULT_SETTINGS.tableMode),
     enableStrikethrough: data.get('enableStrikethrough') === 'on',
-    preserveTables: data.get('preserveTables') === 'on',
+    enableTaskListItems: data.get('enableTaskListItems') === 'on',
+    enableHighlightedCodeBlocks: data.get('enableHighlightedCodeBlocks') === 'on',
 
     theme: readChoice(data.get('theme'), themePreferences, DEFAULT_SETTINGS.theme),
-    zenDensity: data.get('zenDensity') === 'on',
+    density: readChoice(data.get('density'), densityPreferences, DEFAULT_SETTINGS.density),
   };
 }
 
@@ -214,12 +247,14 @@ function writeSettingsToForm(form: HTMLFormElement, settings: AppSettings): void
   getFormSelect(form, 'bulletListMarker').value = settings.bulletListMarker;
   getFormSelect(form, 'linkMode').value = settings.linkMode;
   getFormSelect(form, 'imageMode').value = settings.imageMode;
+  getFormSelect(form, 'tableMode').value = settings.tableMode;
   getFormSelect(form, 'theme').value = settings.theme;
+  getFormSelect(form, 'density').value = settings.density;
 
   getFormCheckbox(form, 'removeComments').checked = settings.removeComments;
   getFormCheckbox(form, 'enableStrikethrough').checked = settings.enableStrikethrough;
-  getFormCheckbox(form, 'preserveTables').checked = settings.preserveTables;
-  getFormCheckbox(form, 'zenDensity').checked = settings.zenDensity;
+  getFormCheckbox(form, 'enableTaskListItems').checked = settings.enableTaskListItems;
+  getFormCheckbox(form, 'enableHighlightedCodeBlocks').checked = settings.enableHighlightedCodeBlocks;
 }
 
 function getFormSelect(form: HTMLFormElement, name: string): HTMLSelectElement {
