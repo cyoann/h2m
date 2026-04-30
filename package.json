@@ -3,10 +3,11 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "pnpm@10.28.2",
   "scripts": {
     "dev": "vite",
     "assets": "node scripts/generate-pwa-assets.mjs",
-    "build": "pnpm assets && tsc && vite build",
+    "build": "node scripts/generate-pwa-assets.mjs && tsc && vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",

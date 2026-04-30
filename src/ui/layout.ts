@@ -180,7 +180,9 @@ export function createLayout(): HTMLElement {
   }
 
   function openSettings(): void {
-    settingsPanel.showModal();
+    if (!settingsPanel.open) {
+      settingsPanel.showModal();
+    }
   }
 
   async function loadFile(file: File): Promise<void> {

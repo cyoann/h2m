@@ -48,7 +48,8 @@ const appShellMarkup = `
         class="quiet-button"
         type="button"
         data-action="open-settings"
-        title="Open settings"
+        title="Open settings (Ctrl/Cmd+,)"
+        aria-keyshortcuts="Control+, Meta+,"
       >
         Settings
       </button>
@@ -66,7 +67,8 @@ const appShellMarkup = `
         class="primary-action"
         type="button"
         data-action="open-file"
-        title="Open an HTML or text file"
+        title="Open an HTML or text file (Ctrl/Cmd+O)"
+        aria-keyshortcuts="Control+O Meta+O"
       >
         Open file
       </button>
@@ -75,7 +77,8 @@ const appShellMarkup = `
         class="secondary-action"
         type="button"
         data-action="paste-html"
-        title="Paste HTML from clipboard"
+        title="Paste HTML from clipboard (Ctrl/Cmd+Shift+V)"
+        aria-keyshortcuts="Control+Shift+V Meta+Shift+V"
       >
         Paste HTML
       </button>
@@ -84,7 +87,8 @@ const appShellMarkup = `
         class="secondary-action"
         type="button"
         data-action="clear-html"
-        title="Clear input"
+        title="Clear input (Ctrl/Cmd+Shift+X)"
+        aria-keyshortcuts="Control+Shift+X Meta+Shift+X"
       >
         Clear
       </button>
@@ -128,7 +132,8 @@ const appShellMarkup = `
             type="button"
             data-action="copy-markdown"
             disabled
-            title="Copy Markdown to clipboard"
+            title="Copy Markdown to clipboard (Ctrl/Cmd+Shift+C)"
+            aria-keyshortcuts="Control+Shift+C Meta+Shift+C"
           >
             Copy
           </button>
@@ -137,7 +142,8 @@ const appShellMarkup = `
             type="button"
             data-action="download-markdown"
             disabled
-            title="Download Markdown file"
+            title="Download Markdown file (Ctrl/Cmd+Shift+S)"
+            aria-keyshortcuts="Control+Shift+S Meta+Shift+S"
           >
             Download
           </button>
@@ -168,8 +174,8 @@ Paste HTML on the left. Markdown appears here."
 
   <footer class="statusbar" aria-live="polite">
     <div class="statusbar__messages">
-      <span data-status-primary>Ready</span>
-      <span data-status-secondary>Local only</span>
+      <span class="statusbar__primary" data-status-primary>Ready</span>
+      <span class="statusbar__secondary" data-status-secondary>Local only</span>
     </div>
 
     <dl class="metrics" aria-label="Conversion metrics">
