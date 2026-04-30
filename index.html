@@ -6,16 +6,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
 
-    <meta name="description" content="h2m is a lightweight offline HTML-to-Markdown converter." />
+    <title>h2m — Offline HTML to Markdown Converter</title>
+    <meta
+      name="description"
+      content="Convert copied web page HTML or local HTML files to clean Markdown in your browser. h2m works offline and sanitizes input before conversion."
+    />
+    <meta name="application-name" content="h2m" />
+    <meta name="apple-mobile-web-app-title" content="h2m" />
+    <meta name="robots" content="index, follow" />
 
-    <meta name="theme-color" content="#f7f4ee" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#151515" media="(prefers-color-scheme: dark)" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="h2m" />
+    <meta property="og:title" content="h2m — Offline HTML to Markdown Converter" />
+    <meta
+      property="og:description"
+      content="Paste HTML or open a local file. h2m sanitizes it in your browser and returns clean Markdown."
+    />
+    <meta property="og:image" content="/pwa-512x512.png" />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="h2m — Offline HTML to Markdown Converter" />
+    <meta
+      name="twitter:description"
+      content="Convert copied web pages and local HTML files to Markdown without sending content to a server."
+    />
+    <meta name="twitter:image" content="/pwa-512x512.png" />
+
+    <meta name="theme-color" content="#f6f2ea" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#101214" media="(prefers-color-scheme: dark)" />
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="alternate icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
-    <title>h2m — HTML to Markdown</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "h2m",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Any",
+        "description": "A browser-based HTML-to-Markdown converter that sanitizes copied HTML and local files before converting them to Markdown.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
   </head>
 
   <body>
@@ -24,10 +62,21 @@
     </noscript>
 
     <main id="app" aria-label="h2m application">
-      <section class="boot-shell" aria-live="polite">
+      <section class="boot-shell seo-shell" aria-labelledby="seo-title">
         <p class="boot-shell__mark">h2m</p>
-        <h1 class="boot-shell__title">HTML to Markdown</h1>
-        <p class="boot-shell__note">Preparing the editor…</p>
+        <h1 class="boot-shell__title" id="seo-title">Offline HTML to Markdown converter</h1>
+        <p class="boot-shell__note">
+          Paste copied web page HTML or open a local HTML/text file. h2m sanitizes the input in your
+          browser and converts it to clean Markdown.
+        </p>
+
+        <ul class="seo-shell__list" aria-label="Key features">
+          <li>Works fully offline as a browser PWA.</li>
+          <li>Sanitizes HTML before conversion.</li>
+          <li>Supports pasted HTML, dropped files, copy, and Markdown download.</li>
+        </ul>
+
+        <p class="seo-shell__status">Loading the interactive converter…</p>
       </section>
     </main>
 

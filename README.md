@@ -121,6 +121,14 @@ pnpm assets
 
 Generated files are written to `public/`.
 
+
+## SEO and progressive enhancement
+
+The initial `index.html` contains crawlable product content, metadata, and structured data before JavaScript runs.
+The TypeScript app then replaces that static shell with the interactive converter.
+
+This keeps the app dependency-light while improving indexing, link previews, and no-JavaScript fallback content.
+
 ## Deployment
 
 The app is built as static files and deployed to GitHub Pages by `.github/workflows/pages.yml`.
